@@ -14,4 +14,5 @@ The `Vault`: the vault folder and its locked or unlocked state.
   vault key and data do not change.
 - `status()` returns a `VaultStatus` (`exists`, `unlocked`).
 
-The vault folder contains `vault.db` and `files/`.
+The vault folder contains `vault.db` and `files/`. `UnlockedVault` keeps the
+vault folder, so file operations can find `files/`.

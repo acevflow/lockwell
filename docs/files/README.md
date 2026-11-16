@@ -15,6 +15,8 @@ how it fits in the project.
 | [`src/passwordRules.test.ts`](src/passwordRules.test.ts.md) | Tests for the master password rules.                    |
 | [`src/entryRules.ts`](src/entryRules.ts.md)                 | Entry field limits and search.                          |
 | [`src/entryRules.test.ts`](src/entryRules.test.ts.md)       | Tests for the entry search.                             |
+| [`src/format.ts`](src/format.ts.md)                         | Display formatting (file sizes).                        |
+| [`src/format.test.ts`](src/format.test.ts.md)               | Tests for the formatting helpers.                       |
 | [`src/vite-env.d.ts`](src/vite-env.d.ts.md)                 | Vite client type declarations.                          |
 
 ### Command client (`src/api/`)
@@ -26,6 +28,7 @@ how it fits in the project.
 | [`api/client.test.ts`](src/api/client.test.ts.md) | Tests for the command client.            |
 | [`api/vault.ts`](src/api/vault.ts.md)             | Vault commands.                          |
 | [`api/entries.ts`](src/api/entries.ts.md)         | Entry commands.                          |
+| [`api/files.ts`](src/api/files.ts.md)             | File commands.                           |
 | [`api/security.ts`](src/api/security.ts.md)       | Activity, copy and lock-event bindings.  |
 
 ### Screens (`src/screens/`)
@@ -39,6 +42,8 @@ how it fits in the project.
 | [`screens/VaultScreen.tsx`](src/screens/VaultScreen.tsx.md)             | Unlocked vault: tabs and Lock button.   |
 | [`screens/PasswordsTab.tsx`](src/screens/PasswordsTab.tsx.md)           | Password entries.                       |
 | [`screens/PasswordsTab.test.tsx`](src/screens/PasswordsTab.test.tsx.md) | Tests for the password entries section. |
+| [`screens/FilesTab.tsx`](src/screens/FilesTab.tsx.md)                   | Encrypted files.                        |
+| [`screens/FilesTab.test.tsx`](src/screens/FilesTab.test.tsx.md)         | Tests for the files section.            |
 | [`screens/SettingsTab.tsx`](src/screens/SettingsTab.tsx.md)             | Settings: change the master password.   |
 | [`screens/SettingsTab.test.tsx`](src/screens/SettingsTab.test.tsx.md)   | Tests for the settings section.         |
 
@@ -81,6 +86,7 @@ how it fits in the project.
 | [`commands/mod.rs`](src-tauri/src/commands/mod.rs.md)           | Module entry point.                            |
 | [`commands/vault.rs`](src-tauri/src/commands/vault.rs.md)       | Create, unlock, lock, change master password.  |
 | [`commands/entries.rs`](src-tauri/src/commands/entries.rs.md)   | List, read, create, update and delete entries. |
+| [`commands/files.rs`](src-tauri/src/commands/files.rs.md)       | File commands with native dialogs.             |
 | [`commands/security.rs`](src-tauri/src/commands/security.rs.md) | Activity and copying to the clipboard.         |
 
 ### Vault (`src-tauri/src/vault/`)
@@ -92,6 +98,7 @@ how it fits in the project.
 | [`vault/password_policy.rs`](src-tauri/src/vault/password_policy.rs.md) | Master password rules.                              |
 | [`vault/session.rs`](src-tauri/src/vault/session.rs.md)                 | `Vault`: create, unlock, lock, change password.     |
 | [`vault/entries.rs`](src-tauri/src/vault/entries.rs.md)                 | Encrypted password entries and their validation.    |
+| [`vault/files.rs`](src-tauri/src/vault/files.rs.md)                     | Encrypted files: import, list, export, delete.      |
 
 ### Security (`src-tauri/src/security/`)
 
