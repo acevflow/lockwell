@@ -1,4 +1,5 @@
 # src/App.test.tsx
 
-Smoke test, run with Vitest and Testing Library. It renders `App` and checks
-that the `lockwell` heading is present.
+Tests for `App`: the screen chosen for each vault status, status errors,
+locking (including when `lock_vault` fails) and returning to the unlock
+screen when the core reports a locked vault.

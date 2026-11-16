@@ -32,5 +32,9 @@ and this project adheres to
 - Password entries: title, username, password, URL and notes, each entry
   encrypted as a whole and bound to its id, with commands to list, read,
   create, update and delete them. Listing never returns passwords or notes.
+- Interface: create the vault, unlock it, list and search password entries,
+  view an entry with the password masked until shown, create, edit and delete
+  entries, change the master password and lock the vault. Light and dark
+  themes follow the system.
 
 [Unreleased]: https://github.com/acevflow/lockwell/commits/main
