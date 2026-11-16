@@ -73,10 +73,17 @@ how it fits in the project.
 
 ### Tests (`src/test/`)
 
-| File                                            | Description                         |
-| ----------------------------------------------- | ----------------------------------- |
-| [`test/setup.ts`](src/test/setup.ts.md)         | Vitest setup and Tauri mock.        |
-| [`test/tauriMock.ts`](src/test/tauriMock.ts.md) | Helpers to fake the Tauri commands. |
+| File                                            | Description                                   |
+| ----------------------------------------------- | --------------------------------------------- |
+| [`test/setup.ts`](src/test/setup.ts.md)         | Vitest setup and Tauri mock.                  |
+| [`test/tauriMock.ts`](src/test/tauriMock.ts.md) | Helpers to fake the Tauri commands.           |
+| [`test/fakeCore.ts`](src/test/fakeCore.ts.md)   | Stateful in-memory core for end-to-end tests. |
+
+### End-to-end tests (`src/e2e/`)
+
+| File                                              | Description                                  |
+| ------------------------------------------------- | -------------------------------------------- |
+| [`e2e/flows.test.tsx`](src/e2e/flows.test.tsx.md) | Main user flows through the whole interface. |
 
 ## Core (`src-tauri/`)
 
