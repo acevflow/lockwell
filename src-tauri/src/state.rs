@@ -219,4 +219,40 @@ mod tests {
         assert!(!state.clear_clipboard_if_unchanged(first));
         assert_eq!(fake.content.lock().unwrap().as_deref(), Some("second"));
     }
+
+    #[test]
+    fn copy_errors_reach_the_caller() {
+        let dir = tempfile::tempdir().unwrap();
+        let fake = FakeClipboard {
+            fail: true,
+            ..FakeClipboard::default()
+        };
+        let state = AppState::with_clipboard(
+            Vault::with_kdf(dir.path().join("vault"), FAST_KDF),
+            Box::new(fake),
+        );
+        assert_eq!(
+            state.copy_secret("example-secret").unwrap_err(),
+            AppError::Io("the clipboard is not available".into())
+        );
+    }
+
+    #[test]
+    fn a_panic_inside_an_operation_does_not_block_the_vault() {
+        let (_dir, _fake, state) = unlocked_state();
+        let panicked = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let _: AppResult<()> = state.with_vault(|_| panic!("operation failed"));
+        }));
+        assert!(panicked.is_err());
+        assert!(is_unlocked(&state));
+        assert!(state.lock());
+        assert!(!is_unlocked(&state));
+    }
+
+    #[test]
+    fn locking_reports_whether_the_vault_was_unlocked() {
+        let (_dir, _fake, state) = unlocked_state();
+        assert!(state.lock());
+        assert!(!state.lock());
+    }
 }

@@ -12,4 +12,7 @@ Copies secrets to the clipboard and clears them afterwards.
   locking passes none and clears any copied secret.
 - `CLEAR_AFTER` is 30 seconds.
 
-The `ClipboardBackend` trait lets the tests use an in-memory clipboard.
+The `ClipboardBackend` trait lets the tests use an in-memory clipboard. They
+cover copying, clearing only its own copy, generations, an unavailable
+clipboard, a clear that fails (reported, not retried) and error messages that
+never contain the secret.

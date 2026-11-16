@@ -248,4 +248,60 @@ pub(crate) mod tests {
         assert!(matches!(clipboard.copy("x"), Err(AppError::Io(_))));
         assert!(!clipboard.clear_if_unchanged(None));
     }
+
+    /// Clipboard that keeps its text because clearing it always fails.
+    struct UnclearableClipboard {
+        content: Arc<Mutex<Option<String>>>,
+    }
+
+    impl ClipboardBackend for UnclearableClipboard {
+        fn set_text(&mut self, text: &str) -> Result<(), String> {
+            *self.content.lock().unwrap() = Some(text.to_owned());
+            Ok(())
+        }
+
+        fn get_text(&mut self) -> Result<String, String> {
+            Ok(self.content.lock().unwrap().clone().unwrap_or_default())
+        }
+
+        fn clear(&mut self) -> Result<(), String> {
+            Err("busy".into())
+        }
+    }
+
+    #[test]
+    fn a_failed_clear_is_reported_and_not_retried() {
+        let content = Arc::new(Mutex::new(None));
+        let mut clipboard = SecureClipboard::new(Box::new(UnclearableClipboard {
+            content: content.clone(),
+        }));
+        let generation = clipboard.copy("example-secret").unwrap();
+        assert!(!clipboard.clear_if_unchanged(Some(generation)));
+        assert!(!clipboard.clear_if_unchanged(None));
+        assert_eq!(content.lock().unwrap().as_deref(), Some("example-secret"));
+    }
+
+    #[test]
+    fn the_copy_error_does_not_contain_the_secret() {
+        let fake = FakeClipboard {
+            fail: true,
+            ..FakeClipboard::default()
+        };
+        let mut clipboard = SecureClipboard::new(Box::new(fake));
+        let error = clipboard.copy("synthetic-secret").unwrap_err();
+        assert_eq!(error, AppError::Io("the clipboard is not available".into()));
+        assert!(
+            !serde_json::to_string(&error)
+                .unwrap()
+                .contains("synthetic-secret")
+        );
+    }
+
+    #[test]
+    fn generations_increase_with_every_copy() {
+        let (_fake, mut clipboard) = clipboard();
+        let first = clipboard.copy("a").unwrap();
+        let second = clipboard.copy("b").unwrap();
+        assert!(second > first);
+    }
 }

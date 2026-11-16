@@ -15,3 +15,7 @@ each behind its own mutex.
 
 A poisoned mutex is recovered instead of failing forever, because database
 writes are transactional.
+
+Tests cover the operation result, the blocking variant, locking (and its
+result), clearing the copied secret, the idle lock, clipboard errors and
+recovery after an operation panics while holding the vault.
