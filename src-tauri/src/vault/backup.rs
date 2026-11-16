@@ -727,7 +727,10 @@ mod tests {
         let cases = [
             (b"NOPE".to_vec(), "unknown backup contents"),
             (CONTAINER_MAGIC[..2].to_vec(), "the backup is truncated"),
-            (container(&[database.clone()]), "the backup is truncated"),
+            (
+                container(std::slice::from_ref(&database)),
+                "the backup is truncated",
+            ),
             (
                 container(&[database.clone(), end.clone(), b"x".to_vec()]),
                 "unexpected data after the end",
