@@ -1,0 +1,86 @@
+name: Bug report
+description: Report something that does not work as expected.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug.
+
+        > [!CAUTION]
+        > **Never include sensitive data in this issue**: no master passwords,
+        > vault files, keys, stored passwords or personal documents. Use a test
+        > vault with made-up data, and review logs and screenshots before you
+        > attach them.
+
+        **Security vulnerabilities must not be reported here.** Use
+        [private vulnerability reporting](https://github.com/acevflow/lockwell/security/advisories/new)
+        instead.
+
+        Please search the [existing issues](https://github.com/acevflow/lockwell/issues)
+        first to check that this bug has not been reported already.
+  - type: input
+    id: version
+    attributes:
+      label: lockwell version
+      description: The version or commit hash you are using.
+      placeholder: "e.g. 0.1.0 or 4faf5d6"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: os-version
+    attributes:
+      label: Operating system version
+      placeholder: "e.g. Windows 11 24H2"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The exact steps that trigger the problem.
+      placeholder: |
+        1. Open the app.
+        2. Click on "..."
+        3. See the error.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      description: What you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      description: What happened instead. Screenshots are welcome if they contain no sensitive data.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant log output, if any. Remove any sensitive data before pasting. It will be formatted as code automatically.
+      render: shell
+  - type: checkboxes
+    id: no-sensitive-data
+    attributes:
+      label: Confirmation
+      options:
+        - label: This issue contains no master passwords, keys, vault files, stored passwords or other personal data.
+          required: true
