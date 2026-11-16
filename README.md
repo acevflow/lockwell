@@ -91,16 +91,17 @@ cd lockwell
 
 Run these from the repository root:
 
-| Task                         | Command                |
-| ---------------------------- | ---------------------- |
-| Install dependencies         | `npm ci`               |
-| Run the app in development   | `npm run tauri dev`    |
-| Build the desktop app        | `npm run tauri build`  |
-| Run the tests (Vitest, Rust) | `npm test`             |
-| Lint (ESLint, clippy)        | `npm run lint`         |
-| Check formatting             | `npm run format:check` |
-| Format the code              | `npm run format`       |
-| Type check                   | `npm run typecheck`    |
+| Task                         | Command                 |
+| ---------------------------- | ----------------------- |
+| Install dependencies         | `npm ci`                |
+| Run the app in development   | `npm run tauri dev`     |
+| Build the desktop app        | `npm run tauri build`   |
+| Run the tests (Vitest, Rust) | `npm test`              |
+| Run the tests with coverage  | `npm run test:coverage` |
+| Lint (ESLint, clippy)        | `npm run lint`          |
+| Check formatting             | `npm run format:check`  |
+| Format the code              | `npm run format`        |
+| Type check                   | `npm run typecheck`     |
 
 See the [contributing guide](CONTRIBUTING.md) for more details.
 
