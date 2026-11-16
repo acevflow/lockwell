@@ -45,5 +45,9 @@ and this project adheres to
 - Encrypted files: add files to the vault, save decrypted copies and delete
   them. Content is encrypted in 64 KiB chunks and file names are encrypted
   too; the files on disk are named with random ids.
+- Encrypted backup: save the whole vault (entries and files) in one
+  `.lwbackup` file encrypted with the vault key, and restore it over the
+  current vault or on a new computer. A restore is fully checked before it
+  replaces anything.
 
 [Unreleased]: https://github.com/acevflow/lockwell/commits/main

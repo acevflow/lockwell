@@ -3,6 +3,7 @@ import { errorMessage } from "../api/client";
 import { createVault } from "../api/vault";
 import ErrorBanner from "../components/ErrorBanner";
 import PasswordInput from "../components/PasswordInput";
+import RestoreBackupForm from "../components/RestoreBackupForm";
 import {
   MIN_MASTER_PASSWORD_CHARS,
   masterPasswordProblem,
@@ -11,10 +12,16 @@ import {
 interface SetupScreenProps {
   /** Called once the vault exists and is unlocked. */
   onCreated: () => void;
+  /** Called once a backup was restored; the vault is then locked. */
+  onRestored: () => void;
 }
 
-/** First run: choose the master password and create the vault. */
-function SetupScreen({ onCreated }: SetupScreenProps) {
+/**
+ * First run: choose the master password and create the vault, or restore
+ * an existing backup instead.
+ */
+function SetupScreen({ onCreated, onRestored }: SetupScreenProps) {
+  const [restoring, setRestoring] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [acknowledged, setAcknowledged] = useState(false);
@@ -47,6 +54,23 @@ function SetupScreen({ onCreated }: SetupScreenProps) {
       setError(errorMessage(createError));
       setBusy(false);
     }
+  }
+
+  if (restoring) {
+    return (
+      <main className="centered">
+        <div className="card">
+          <RestoreBackupForm replacesVault={false} onRestored={onRestored} />
+          <button
+            type="button"
+            className="link switch-mode"
+            onClick={() => setRestoring(false)}
+          >
+            Create a new vault instead
+          </button>
+        </div>
+      </main>
+    );
   }
 
   return (
@@ -94,6 +118,13 @@ function SetupScreen({ onCreated }: SetupScreenProps) {
         </label>
         <button type="submit" disabled={busy}>
           {busy ? "Creating vault…" : "Create vault"}
+        </button>
+        <button
+          type="button"
+          className="link switch-mode"
+          onClick={() => setRestoring(true)}
+        >
+          Restore from a backup instead
         </button>
       </form>
     </main>

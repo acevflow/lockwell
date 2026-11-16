@@ -3,6 +3,7 @@
 //! Commands stay thin: they validate and convert their arguments and
 //! delegate to the vault.
 
+pub mod backup;
 pub mod entries;
 pub mod files;
 pub mod security;

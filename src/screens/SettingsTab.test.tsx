@@ -19,7 +19,7 @@ function submit(current: string, next: string, confirmation = next) {
 describe("SettingsTab", () => {
   it("changes the master password", async () => {
     mockCommands({ change_master_password: () => null });
-    render(<SettingsTab onLocked={vi.fn()} />);
+    render(<SettingsTab onLocked={vi.fn()} onRestored={vi.fn()} />);
     submit("old test phrase", "new test phrase!");
     expect(await screen.findByRole("status")).toHaveTextContent(
       "Master password changed.",
@@ -32,7 +32,7 @@ describe("SettingsTab", () => {
 
   it("validates the new password locally", () => {
     mockCommands({});
-    render(<SettingsTab onLocked={vi.fn()} />);
+    render(<SettingsTab onLocked={vi.fn()} onRestored={vi.fn()} />);
     submit("old test phrase", "short");
     expect(screen.getByRole("alert")).toHaveTextContent("at least 12");
     submit("old test phrase", "new test phrase!", "different phrase");
@@ -48,7 +48,7 @@ describe("SettingsTab", () => {
     mockCommands({
       change_master_password: failWith("wrong_password", "incorrect"),
     });
-    render(<SettingsTab onLocked={vi.fn()} />);
+    render(<SettingsTab onLocked={vi.fn()} onRestored={vi.fn()} />);
     submit("wrong test phrase", "new test phrase!");
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "The current master password is incorrect.",
@@ -58,7 +58,7 @@ describe("SettingsTab", () => {
   it("calls onLocked when the vault is locked", async () => {
     mockCommands({ change_master_password: failWith("locked", "locked") });
     const onLocked = vi.fn();
-    render(<SettingsTab onLocked={onLocked} />);
+    render(<SettingsTab onLocked={onLocked} onRestored={vi.fn()} />);
     submit("old test phrase", "new test phrase!");
     await vi.waitFor(() => expect(onLocked).toHaveBeenCalledOnce());
   });

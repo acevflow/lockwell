@@ -12,4 +12,5 @@ Locking calls `lock_vault` and always returns to the unlock screen, even if
 the call fails, so decrypted data is never left on screen. When the core
 reports that the vault is locked, it also returns to the unlock screen. When
 the core locked the vault on its own, the unlock screen says why (5 minutes
-of inactivity or Windows locked).
+of inactivity or Windows locked). After a backup is restored, it shows the
+unlock screen with a note about which password to use.

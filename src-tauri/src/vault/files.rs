@@ -28,9 +28,9 @@ use crate::error::{AppError, AppResult};
 use crate::storage::db::{self, Table};
 
 /// Magic bytes at the start of every encrypted file blob.
-const BLOB_MAGIC: &[u8; 4] = b"LWF1";
+pub(crate) const BLOB_MAGIC: &[u8; 4] = b"LWF1";
 /// Extension of the encrypted file blobs.
-const BLOB_EXTENSION: &str = "lwf";
+pub(crate) const BLOB_EXTENSION: &str = "lwf";
 /// Maximum length of a file name, in characters.
 pub const MAX_FILE_NAME_CHARS: usize = 255;
 
@@ -210,7 +210,7 @@ impl UnlockedVault {
 
     /// Refuses paths inside the vault folder, so the vault's own files are
     /// never imported or overwritten.
-    fn check_outside_vault(&self, path: &Path) -> AppResult<()> {
+    pub(crate) fn check_outside_vault(&self, path: &Path) -> AppResult<()> {
         let vault = fs::canonicalize(&self.dir)?;
         let target = match fs::canonicalize(path) {
             Ok(resolved) => resolved,
@@ -299,7 +299,7 @@ pub fn validate_file_name(name: &str) -> AppResult<()> {
 
 /// Writes `target` through a temporary file in the same folder that is
 /// renamed over `target` only if `write` succeeds; otherwise it is removed.
-fn write_atomically<T>(
+pub(crate) fn write_atomically<T>(
     target: &Path,
     write: impl FnOnce(&mut BufWriter<File>) -> AppResult<T>,
 ) -> AppResult<T> {

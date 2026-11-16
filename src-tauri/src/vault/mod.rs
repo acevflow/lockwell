@@ -1,6 +1,7 @@
 //! The vault: key header, master password rules, the locked/unlocked
 //! session and the password entries.
 
+pub mod backup;
 pub mod entries;
 pub mod files;
 pub mod header;
