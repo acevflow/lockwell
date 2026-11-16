@@ -26,6 +26,7 @@ how it fits in the project.
 | [`api/client.test.ts`](src/api/client.test.ts.md) | Tests for the command client.            |
 | [`api/vault.ts`](src/api/vault.ts.md)             | Vault commands.                          |
 | [`api/entries.ts`](src/api/entries.ts.md)         | Entry commands.                          |
+| [`api/security.ts`](src/api/security.ts.md)       | Activity, copy and lock-event bindings.  |
 
 ### Screens (`src/screens/`)
 
@@ -53,6 +54,8 @@ how it fits in the project.
 | [`components/EntryView.tsx`](src/components/EntryView.tsx.md)             | Read-only entry with masked password.    |
 | [`components/components.test.tsx`](src/components/components.test.tsx.md) | Tests for the small components.          |
 | [`hooks/useApiError.ts`](src/hooks/useApiError.ts.md)                     | Error state that handles a locked vault. |
+| [`hooks/useActivityReporter.ts`](src/hooks/useActivityReporter.ts.md)     | Reports user activity to the core.       |
+| [`hooks/useVaultLockedEvent.ts`](src/hooks/useVaultLockedEvent.ts.md)     | Reacts to the lock event.                |
 
 ### Tests (`src/test/`)
 
@@ -73,11 +76,12 @@ how it fits in the project.
 
 ### Commands (`src-tauri/src/commands/`)
 
-| File                                                          | Description                                    |
-| ------------------------------------------------------------- | ---------------------------------------------- |
-| [`commands/mod.rs`](src-tauri/src/commands/mod.rs.md)         | Module entry point.                            |
-| [`commands/vault.rs`](src-tauri/src/commands/vault.rs.md)     | Create, unlock, lock, change master password.  |
-| [`commands/entries.rs`](src-tauri/src/commands/entries.rs.md) | List, read, create, update and delete entries. |
+| File                                                            | Description                                    |
+| --------------------------------------------------------------- | ---------------------------------------------- |
+| [`commands/mod.rs`](src-tauri/src/commands/mod.rs.md)           | Module entry point.                            |
+| [`commands/vault.rs`](src-tauri/src/commands/vault.rs.md)       | Create, unlock, lock, change master password.  |
+| [`commands/entries.rs`](src-tauri/src/commands/entries.rs.md)   | List, read, create, update and delete entries. |
+| [`commands/security.rs`](src-tauri/src/commands/security.rs.md) | Activity and copying to the clipboard.         |
 
 ### Vault (`src-tauri/src/vault/`)
 
@@ -88,6 +92,15 @@ how it fits in the project.
 | [`vault/password_policy.rs`](src-tauri/src/vault/password_policy.rs.md) | Master password rules.                              |
 | [`vault/session.rs`](src-tauri/src/vault/session.rs.md)                 | `Vault`: create, unlock, lock, change password.     |
 | [`vault/entries.rs`](src-tauri/src/vault/entries.rs.md)                 | Encrypted password entries and their validation.    |
+
+### Security (`src-tauri/src/security/`)
+
+| File                                                                                    | Description                                                  |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| [`security/mod.rs`](src-tauri/src/security/mod.rs.md)                                   | Idle and Windows lock watchers, clipboard timer, lock event. |
+| [`security/autolock.rs`](src-tauri/src/security/autolock.rs.md)                         | Inactivity tracking (5 minutes).                             |
+| [`security/clipboard.rs`](src-tauri/src/security/clipboard.rs.md)                       | Copy secrets and clear them after 30 seconds.                |
+| [`security/session_lock_windows.rs`](src-tauri/src/security/session_lock_windows.rs.md) | Detect the Windows session lock.                             |
 
 ### Storage (`src-tauri/src/storage/`)
 

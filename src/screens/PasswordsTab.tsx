@@ -6,6 +6,7 @@ import {
   listEntries,
   updateEntry,
 } from "../api/entries";
+import { copyEntryField, type CopyableField } from "../api/security";
 import type { Entry, EntryInput, EntrySummary } from "../api/types";
 import ConfirmDialog from "../components/ConfirmDialog";
 import EntryForm from "../components/EntryForm";
@@ -82,6 +83,16 @@ function PasswordsTab({ onLocked }: PasswordsTabProps) {
     await updateEntry(id, input);
     await reload();
     setMode({ kind: "view", entry: await getEntry(id) });
+  }
+
+  async function copy(id: string, field: CopyableField) {
+    clear();
+    try {
+      await copyEntryField(id, field);
+    } catch (copyError) {
+      report(copyError);
+      throw copyError;
+    }
   }
 
   async function remove(id: string) {
@@ -167,6 +178,7 @@ function PasswordsTab({ onLocked }: PasswordsTabProps) {
             entry={mode.entry}
             onEdit={() => setMode({ kind: "edit", entry: mode.entry })}
             onDelete={() => setConfirmDelete(true)}
+            onCopy={(field) => copy(mode.entry.id, field)}
           />
         )}
       </section>

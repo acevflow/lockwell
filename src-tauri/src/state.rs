@@ -1,26 +1,44 @@
-//! Application state shared by the Tauri commands.
+//! Application state shared by the Tauri commands and background watchers.
 
 use std::sync::{Arc, Mutex, MutexGuard};
+use std::time::Instant;
 
 use crate::error::{AppError, AppResult};
+use crate::security::autolock::{ActivityTracker, IDLE_TIMEOUT};
+use crate::security::clipboard::{ClipboardBackend, SecureClipboard, SystemClipboard};
 use crate::vault::Vault;
 
-/// State managed by Tauri: the vault behind a mutex, so only one command
-/// uses it at a time.
+/// State managed by Tauri: the vault, the time of the last user activity
+/// and the clipboard. Each part sits behind its own mutex; no code holds
+/// the clipboard mutex while taking the vault one, so they cannot deadlock.
 #[derive(Clone)]
 pub struct AppState {
     vault: Arc<Mutex<Vault>>,
+    activity: Arc<Mutex<ActivityTracker>>,
+    clipboard: Arc<Mutex<SecureClipboard>>,
 }
 
 impl AppState {
-    /// Wraps a vault.
+    /// State over `vault` and the system clipboard.
     pub fn new(vault: Vault) -> AppState {
+        AppState::with_clipboard(vault, Box::new(SystemClipboard))
+    }
+
+    /// State over `vault` and a given clipboard backend.
+    pub fn with_clipboard(vault: Vault, clipboard: Box<dyn ClipboardBackend>) -> AppState {
         AppState {
             vault: Arc::new(Mutex::new(vault)),
+            activity: Arc::new(Mutex::new(ActivityTracker::new(
+                Instant::now(),
+                IDLE_TIMEOUT,
+            ))),
+            clipboard: Arc::new(Mutex::new(SecureClipboard::new(clipboard))),
         }
     }
 
-    /// Runs `operation` with exclusive access to the vault.
+    /// Runs `operation` with exclusive access to the vault. Every command
+    /// counts as user activity, before and after it runs (so a long
+    /// operation does not trigger the automatic lock as soon as it ends).
     ///
     /// # Errors
     /// Returns the error of `operation`.
@@ -28,7 +46,10 @@ impl AppState {
         &self,
         operation: impl FnOnce(&mut Vault) -> AppResult<T>,
     ) -> AppResult<T> {
-        operation(&mut self.lock_vault())
+        self.touch();
+        let result = operation(&mut lock(&self.vault));
+        self.touch();
+        result
     }
 
     /// Runs a slow `operation` (key derivation, file encryption) on a
@@ -48,24 +69,83 @@ impl AppState {
             .map_err(|_| AppError::Io("background task failed".into()))?
     }
 
-    /// Locks the mutex. A panic while holding it cannot leave the vault in a
-    /// half-updated state that matters (database writes are transactional),
-    /// so a poisoned mutex is recovered instead of failing forever.
-    fn lock_vault(&self) -> MutexGuard<'_, Vault> {
-        self.vault
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    /// Records user activity now.
+    pub fn touch(&self) {
+        lock(&self.activity).touch(Instant::now());
     }
+
+    /// Locks the vault and clears a secret this app left on the clipboard.
+    /// Returns whether the vault was unlocked.
+    pub fn lock(&self) -> bool {
+        let was_unlocked = {
+            let mut vault = lock(&self.vault);
+            let was_unlocked = vault.is_unlocked();
+            vault.lock();
+            was_unlocked
+        };
+        lock(&self.clipboard).clear_if_unchanged(None);
+        was_unlocked
+    }
+
+    /// Locks the vault if it is unlocked and there was no activity for the
+    /// idle timeout as of `now`. Returns whether it locked.
+    pub fn lock_if_idle(&self, now: Instant) -> bool {
+        let idle = lock(&self.activity).is_idle(now);
+        idle && self.lock()
+    }
+
+    /// Copies a secret to the clipboard and returns its generation.
+    ///
+    /// # Errors
+    /// Returns [`AppError::Io`] if the clipboard cannot be written.
+    pub fn copy_secret(&self, text: &str) -> AppResult<u64> {
+        lock(&self.clipboard).copy(text)
+    }
+
+    /// Clears the copy `generation` if the clipboard still holds it.
+    pub fn clear_clipboard_if_unchanged(&self, generation: u64) -> bool {
+        lock(&self.clipboard).clear_if_unchanged(Some(generation))
+    }
+}
+
+/// Locks a mutex. A panic while holding it cannot leave the state half
+/// updated in a way that matters (database writes are transactional), so a
+/// poisoned mutex is recovered instead of failing forever.
+fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
+    mutex
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
 #[cfg(test)]
 mod tests {
+    use std::time::Duration;
+
     use super::*;
+    use crate::security::clipboard::tests::FakeClipboard;
+    use crate::vault::header::tests::FAST_KDF;
+    use crate::vault::session::tests::PASSWORD;
+
+    fn unlocked_state() -> (tempfile::TempDir, FakeClipboard, AppState) {
+        let dir = tempfile::tempdir().unwrap();
+        let fake = FakeClipboard::default();
+        let state = AppState::with_clipboard(
+            Vault::with_kdf(dir.path().join("vault"), FAST_KDF),
+            Box::new(fake.clone()),
+        );
+        state.with_vault(|vault| vault.create(PASSWORD)).unwrap();
+        (dir, fake, state)
+    }
+
+    fn is_unlocked(state: &AppState) -> bool {
+        state.with_vault(|vault| Ok(vault.is_unlocked())).unwrap()
+    }
 
     #[test]
     fn with_vault_returns_the_operation_result() {
         let dir = tempfile::tempdir().unwrap();
-        let state = AppState::new(Vault::new(dir.path()));
+        let state =
+            AppState::with_clipboard(Vault::new(dir.path()), Box::new(FakeClipboard::default()));
         assert!(!state.with_vault(|vault| Ok(vault.exists())).unwrap());
         assert_eq!(
             state
@@ -78,10 +158,65 @@ mod tests {
     #[test]
     fn with_vault_blocking_runs_on_another_thread() {
         let dir = tempfile::tempdir().unwrap();
-        let state = AppState::new(Vault::new(dir.path()));
+        let state =
+            AppState::with_clipboard(Vault::new(dir.path()), Box::new(FakeClipboard::default()));
         let status =
             tauri::async_runtime::block_on(state.with_vault_blocking(|vault| Ok(vault.status())))
                 .unwrap();
         assert!(!status.exists);
+    }
+
+    #[test]
+    fn lock_locks_and_clears_the_copied_secret() {
+        let (_dir, fake, state) = unlocked_state();
+        state.copy_secret("example-secret").unwrap();
+        assert!(state.lock());
+        assert!(!is_unlocked(&state));
+        assert_eq!(*fake.content.lock().unwrap(), None);
+        assert!(!state.lock());
+    }
+
+    #[test]
+    fn lock_keeps_what_the_user_copied() {
+        let (_dir, fake, state) = unlocked_state();
+        state.copy_secret("example-secret").unwrap();
+        *fake.content.lock().unwrap() = Some("user text".into());
+        state.lock();
+        assert_eq!(fake.content.lock().unwrap().as_deref(), Some("user text"));
+    }
+
+    #[test]
+    fn lock_if_idle_waits_for_the_timeout() {
+        let (_dir, _fake, state) = unlocked_state();
+        let now = Instant::now();
+        assert!(!state.lock_if_idle(now));
+        assert!(is_unlocked(&state));
+        assert!(state.lock_if_idle(now + IDLE_TIMEOUT + Duration::from_secs(1)));
+        assert!(!is_unlocked(&state));
+    }
+
+    #[test]
+    fn lock_if_idle_does_nothing_when_already_locked() {
+        let (_dir, _fake, state) = unlocked_state();
+        state.lock();
+        assert!(!state.lock_if_idle(Instant::now() + IDLE_TIMEOUT * 2));
+    }
+
+    #[test]
+    fn activity_postpones_the_idle_lock() {
+        let (_dir, _fake, state) = unlocked_state();
+        let start = Instant::now();
+        std::thread::sleep(Duration::from_millis(20));
+        state.touch();
+        assert!(!state.lock_if_idle(start + IDLE_TIMEOUT));
+    }
+
+    #[test]
+    fn timed_clear_only_clears_its_own_copy() {
+        let (_dir, fake, state) = unlocked_state();
+        let first = state.copy_secret("first").unwrap();
+        state.copy_secret("second").unwrap();
+        assert!(!state.clear_clipboard_if_unchanged(first));
+        assert_eq!(fake.content.lock().unwrap().as_deref(), Some("second"));
     }
 }

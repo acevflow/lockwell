@@ -4,4 +4,5 @@
 //! delegate to the vault.
 
 pub mod entries;
+pub mod security;
 pub mod vault;

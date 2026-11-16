@@ -116,6 +116,49 @@ describe("PasswordsTab", () => {
     expect(password).toHaveTextContent("mail-pass");
   });
 
+  it("copies the password through the core and says when it is cleared", async () => {
+    const invoke = fakeCore();
+    const handlers = invoke.getMockImplementation()!;
+    invoke.mockImplementation((command, args) =>
+      command === "copy_entry_field"
+        ? Promise.resolve(null)
+        : handlers(command, args),
+    );
+    render(<PasswordsTab onLocked={vi.fn()} />);
+    fireEvent.click(await screen.findByRole("button", { name: /Mail/ }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Copy password" }),
+    );
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Password copied. It will be cleared from the clipboard in 30 seconds.",
+    );
+    expect(callsTo("copy_entry_field")).toEqual([
+      { id: ID_A, field: "password" },
+    ]);
+  });
+
+  it("reports copy failures", async () => {
+    const invoke = fakeCore();
+    const handlers = invoke.getMockImplementation()!;
+    invoke.mockImplementation((command, args) =>
+      command === "copy_entry_field"
+        ? Promise.reject({
+            code: "io",
+            message: "the clipboard is not available",
+          })
+        : handlers(command, args),
+    );
+    render(<PasswordsTab onLocked={vi.fn()} />);
+    fireEvent.click(await screen.findByRole("button", { name: /Mail/ }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Copy username" }),
+    );
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The clipboard is not available.",
+    );
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
   it("creates an entry and shows it", async () => {
     render(<PasswordsTab onLocked={vi.fn()} />);
     await screen.findByRole("button", { name: /Mail/ });

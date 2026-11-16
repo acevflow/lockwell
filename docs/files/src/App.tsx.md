@@ -10,4 +10,6 @@ status (`vault_status`) and shows one of:
 
 Locking calls `lock_vault` and always returns to the unlock screen, even if
 the call fails, so decrypted data is never left on screen. When the core
-reports that the vault is locked, it also returns to the unlock screen.
+reports that the vault is locked, it also returns to the unlock screen. When
+the core locked the vault on its own, the unlock screen says why (5 minutes
+of inactivity or Windows locked).

@@ -199,6 +199,12 @@ button.small {
   font-weight: 600;
 }
 
+.notice {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+}
+
 .error-banner {
   display: flex;
   justify-content: space-between;
