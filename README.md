@@ -103,7 +103,8 @@ Run these from the repository root:
 | Format the code              | `npm run format`        |
 | Type check                   | `npm run typecheck`     |
 
-See the [contributing guide](CONTRIBUTING.md) for more details.
+See the [contributing guide](CONTRIBUTING.md) for more details. To test the
+app by hand, follow the [manual testing guide](docs/manual-testing.md).
 
 ## Project structure
 
@@ -148,6 +149,7 @@ include in a report, what to expect and the scope.
 Contributions are welcome. Please read:
 
 - [Contributing guide](CONTRIBUTING.md)
+- [Manual testing guide](docs/manual-testing.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Security policy](SECURITY.md)
 - [Changelog](CHANGELOG.md)

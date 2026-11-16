@@ -8,6 +8,14 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- `docs/manual-testing.md`: manual testing guide with 129 test cases
+  (installation, vault, entries, files, master password change, backup and
+  restore, persistence, security, interface, platforms and uninstallation), a
+  smoke test, a results template, how to report defects and a traceability
+  table to the automated tests. Linked from the README.
+
 ## [0.1.0] - 2026-11-16
 
 First beta. It has not been audited.
