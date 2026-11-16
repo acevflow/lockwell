@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { ApiError } from "../api/client";
 import type { FileSummary } from "../api/types";
 import { callsTo, failWith, mockCommands } from "../test/tauriMock";
 import FilesTab from "./FilesTab";
@@ -100,5 +101,118 @@ describe("FilesTab", () => {
     const onLocked = vi.fn();
     render(<FilesTab onLocked={onLocked} />);
     await vi.waitFor(() => expect(onLocked).toHaveBeenCalledOnce());
+  });
+
+  it("ignores a list that fails after leaving the tab", async () => {
+    let fail!: (reason: unknown) => void;
+    mockCommands({
+      list_files: () => new Promise((_, reject) => (fail = reject)),
+    });
+    const onLocked = vi.fn();
+    const { unmount } = render(<FilesTab onLocked={onLocked} />);
+    unmount();
+    fail(new ApiError("locked", "the vault is locked"));
+    await act(() => Promise.resolve());
+    expect(onLocked).not.toHaveBeenCalled();
+  });
+
+  it("shows that the list is loading", () => {
+    mockCommands({ list_files: () => new Promise(() => {}) });
+    render(<FilesTab onLocked={vi.fn()} />);
+    expect(screen.getByText("Loading…")).toBeVisible();
+  });
+
+  it("shows load errors", async () => {
+    mockCommands({ list_files: failWith("storage", "the database failed") });
+    render(<FilesTab onLocked={vi.fn()} />);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The database failed.",
+    );
+  });
+
+  it("counts several added files", async () => {
+    const other = { ...REPORT, id: "b".repeat(32), name: "photo.jpg" };
+    mockCommands({ list_files: () => [], import_files: () => [REPORT, other] });
+    render(<FilesTab onLocked={vi.fn()} />);
+    await screen.findByText(/No files yet/);
+    fireEvent.click(screen.getByRole("button", { name: "Add files" }));
+    expect(await screen.findByText("Added 2 files.")).toBeVisible();
+  });
+
+  it("says nothing when saving a copy is cancelled", async () => {
+    mockCommands({ list_files: () => [REPORT], export_file: () => false });
+    render(<FilesTab onLocked={vi.fn()} />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Save a copy of report.pdf" }),
+    );
+    await vi.waitFor(() => expect(callsTo("export_file")).toHaveLength(1));
+    await vi.waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Save a copy of report.pdf" }),
+      ).toBeEnabled(),
+    );
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("shows what it is doing and disables the actions meanwhile", async () => {
+    mockCommands({
+      list_files: () => [REPORT],
+      export_file: () => new Promise(() => {}),
+    });
+    render(<FilesTab onLocked={vi.fn()} />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Save a copy of report.pdf" }),
+    );
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Decrypting “report.pdf”…",
+    );
+    expect(screen.getByRole("button", { name: "Add files" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Delete report.pdf" }),
+    ).toBeDisabled();
+  });
+
+  it("dismisses an error", async () => {
+    mockCommands({
+      list_files: () => [REPORT],
+      export_file: failWith("io", "the disk is full"),
+    });
+    render(<FilesTab onLocked={vi.fn()} />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Save a copy of report.pdf" }),
+    );
+    await screen.findByRole("alert");
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss error" }));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("keeps the file when deletion is cancelled", async () => {
+    mockCommands({ list_files: () => [REPORT] });
+    render(<FilesTab onLocked={vi.fn()} />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Delete report.pdf" }),
+    );
+    const dialog = screen.getByRole("alertdialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(screen.getByText("report.pdf")).toBeVisible();
+    expect(callsTo("delete_file")).toHaveLength(0);
+  });
+
+  it("keeps the file when deletion fails", async () => {
+    mockCommands({
+      list_files: () => [REPORT],
+      delete_file: failWith("io", "access denied"),
+    });
+    render(<FilesTab onLocked={vi.fn()} />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Delete report.pdf" }),
+    );
+    const dialog = screen.getByRole("alertdialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Access denied.",
+    );
+    expect(screen.getByText("report.pdf")).toBeVisible();
   });
 });

@@ -22,16 +22,17 @@ how it fits in the project.
 
 ### Command client (`src/api/`)
 
-| File                                              | Description                              |
-| ------------------------------------------------- | ---------------------------------------- |
-| [`api/types.ts`](src/api/types.ts.md)             | Types shared with the core.              |
-| [`api/client.ts`](src/api/client.ts.md)           | `call()`, `ApiError` and error messages. |
-| [`api/client.test.ts`](src/api/client.test.ts.md) | Tests for the command client.            |
-| [`api/vault.ts`](src/api/vault.ts.md)             | Vault commands.                          |
-| [`api/entries.ts`](src/api/entries.ts.md)         | Entry commands.                          |
-| [`api/files.ts`](src/api/files.ts.md)             | File commands.                           |
-| [`api/backup.ts`](src/api/backup.ts.md)           | Backup commands.                         |
-| [`api/security.ts`](src/api/security.ts.md)       | Activity, copy and lock-event bindings.  |
+| File                                              | Description                                         |
+| ------------------------------------------------- | --------------------------------------------------- |
+| [`api/types.ts`](src/api/types.ts.md)             | Types shared with the core.                         |
+| [`api/client.ts`](src/api/client.ts.md)           | `call()`, `ApiError` and error messages.            |
+| [`api/client.test.ts`](src/api/client.test.ts.md) | Tests for the command client.                       |
+| [`api/vault.ts`](src/api/vault.ts.md)             | Vault commands.                                     |
+| [`api/entries.ts`](src/api/entries.ts.md)         | Entry commands.                                     |
+| [`api/files.ts`](src/api/files.ts.md)             | File commands.                                      |
+| [`api/backup.ts`](src/api/backup.ts.md)           | Backup commands.                                    |
+| [`api/security.ts`](src/api/security.ts.md)       | Activity, copy and lock-event bindings.             |
+| [`api/api.test.ts`](src/api/api.test.ts.md)       | Tests for every command wrapper and the lock event. |
 
 ### Screens (`src/screens/`)
 
@@ -42,6 +43,7 @@ how it fits in the project.
 | [`screens/UnlockScreen.tsx`](src/screens/UnlockScreen.tsx.md)           | Unlock with the master password.               |
 | [`screens/UnlockScreen.test.tsx`](src/screens/UnlockScreen.test.tsx.md) | Tests for the unlock screen.                   |
 | [`screens/VaultScreen.tsx`](src/screens/VaultScreen.tsx.md)             | Unlocked vault: tabs and Lock button.          |
+| [`screens/VaultScreen.test.tsx`](src/screens/VaultScreen.test.tsx.md)   | Tests for the unlocked vault screen.           |
 | [`screens/PasswordsTab.tsx`](src/screens/PasswordsTab.tsx.md)           | Password entries.                              |
 | [`screens/PasswordsTab.test.tsx`](src/screens/PasswordsTab.test.tsx.md) | Tests for the password entries section.        |
 | [`screens/FilesTab.tsx`](src/screens/FilesTab.tsx.md)                   | Encrypted files.                               |
@@ -59,6 +61,7 @@ how it fits in the project.
 | [`components/EntryList.tsx`](src/components/EntryList.tsx.md)                 | List of entries.                         |
 | [`components/EntryForm.tsx`](src/components/EntryForm.tsx.md)                 | Create or edit an entry.                 |
 | [`components/EntryView.tsx`](src/components/EntryView.tsx.md)                 | Read-only entry with masked password.    |
+| [`components/entries.test.tsx`](src/components/entries.test.tsx.md)           | Tests for the entry components.          |
 | [`components/components.test.tsx`](src/components/components.test.tsx.md)     | Tests for the small components.          |
 | [`components/CreateBackupPanel.tsx`](src/components/CreateBackupPanel.tsx.md) | Create an encrypted backup.              |
 | [`components/RestoreBackupForm.tsx`](src/components/RestoreBackupForm.tsx.md) | Restore a backup.                        |
@@ -66,13 +69,21 @@ how it fits in the project.
 | [`hooks/useApiError.ts`](src/hooks/useApiError.ts.md)                         | Error state that handles a locked vault. |
 | [`hooks/useActivityReporter.ts`](src/hooks/useActivityReporter.ts.md)         | Reports user activity to the core.       |
 | [`hooks/useVaultLockedEvent.ts`](src/hooks/useVaultLockedEvent.ts.md)         | Reacts to the lock event.                |
+| [`hooks/hooks.test.tsx`](src/hooks/hooks.test.tsx.md)                         | Tests for the hooks.                     |
 
 ### Tests (`src/test/`)
 
-| File                                            | Description                         |
-| ----------------------------------------------- | ----------------------------------- |
-| [`test/setup.ts`](src/test/setup.ts.md)         | Vitest setup and Tauri mock.        |
-| [`test/tauriMock.ts`](src/test/tauriMock.ts.md) | Helpers to fake the Tauri commands. |
+| File                                            | Description                                   |
+| ----------------------------------------------- | --------------------------------------------- |
+| [`test/setup.ts`](src/test/setup.ts.md)         | Vitest setup and Tauri mock.                  |
+| [`test/tauriMock.ts`](src/test/tauriMock.ts.md) | Helpers to fake the Tauri commands.           |
+| [`test/fakeCore.ts`](src/test/fakeCore.ts.md)   | Stateful in-memory core for end-to-end tests. |
+
+### End-to-end tests (`src/e2e/`)
+
+| File                                              | Description                                  |
+| ------------------------------------------------- | -------------------------------------------- |
+| [`e2e/flows.test.tsx`](src/e2e/flows.test.tsx.md) | Main user flows through the whole interface. |
 
 ## Core (`src-tauri/`)
 

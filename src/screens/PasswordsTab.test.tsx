@@ -93,6 +93,16 @@ function entryList() {
   return screen.getByRole("list", { name: "Entries" });
 }
 
+/** The fake core, with `command` failing with a core error. */
+function coreFailing(command: string, code: string, message: string) {
+  const invoke = fakeCore();
+  const handlers = invoke.getMockImplementation()!;
+  const failure = failWith(code, message);
+  invoke.mockImplementation(async (name, args) =>
+    name === command ? failure({}) : handlers(name, args),
+  );
+}
+
 describe("PasswordsTab", () => {
   beforeEach(() => {
     fakeCore();
@@ -271,5 +281,95 @@ describe("PasswordsTab", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "An entry failed to decrypt.",
     );
+  });
+
+  it("shows the new entry and an error when the list cannot be refreshed", async () => {
+    render(<PasswordsTab onLocked={vi.fn()} />);
+    await screen.findByRole("button", { name: /Mail/ });
+    coreFailing("list_entries", "storage", "the database is busy");
+    fireEvent.click(screen.getByRole("button", { name: "New entry" }));
+    fireEvent.change(screen.getByLabelText("Title"), {
+      target: { value: "Forum" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Add entry" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The database is busy.",
+    );
+    expect(screen.getByRole("heading", { name: "Forum" })).toBeVisible();
+  });
+
+  it("shows that the list is loading", () => {
+    mockCommands({ list_entries: () => new Promise(() => {}) });
+    render(<PasswordsTab onLocked={vi.fn()} />);
+    expect(screen.getByText("Loading…")).toBeVisible();
+  });
+
+  it("starts without a selected entry", async () => {
+    render(<PasswordsTab onLocked={vi.fn()} />);
+    await screen.findByRole("button", { name: /Mail/ });
+    expect(screen.getByText("Select an entry or add a new one.")).toBeVisible();
+  });
+
+  it("marks the selected entry in the list", async () => {
+    render(<PasswordsTab onLocked={vi.fn()} />);
+    fireEvent.click(await screen.findByRole("button", { name: /Mail/ }));
+    await screen.findByRole("heading", { name: "Mail" });
+    expect(
+      within(entryList()).getByRole("button", { name: /Mail/ }),
+    ).toHaveAttribute("aria-current", "true");
+  });
+
+  it("shows an error when an entry cannot be opened", async () => {
+    coreFailing("get_entry", "corrupt", "an entry failed to decrypt");
+    render(<PasswordsTab onLocked={vi.fn()} />);
+    fireEvent.click(await screen.findByRole("button", { name: /Mail/ }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "An entry failed to decrypt.",
+    );
+    expect(screen.queryByRole("heading", { name: "Mail" })).toBeNull();
+  });
+
+  it("keeps the entry and explains when deletion fails", async () => {
+    coreFailing("delete_entry", "storage", "the database is busy");
+    render(<PasswordsTab onLocked={vi.fn()} />);
+    fireEvent.click(await screen.findByRole("button", { name: /Mail/ }));
+    fireEvent.click(await screen.findByRole("button", { name: "Delete" }));
+    const dialog = screen.getByRole("alertdialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The database is busy.",
+    );
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(within(entryList()).getAllByRole("button")).toHaveLength(2);
+  });
+
+  it("dismisses an error", async () => {
+    coreFailing("get_entry", "corrupt", "an entry failed to decrypt");
+    render(<PasswordsTab onLocked={vi.fn()} />);
+    fireEvent.click(await screen.findByRole("button", { name: /Mail/ }));
+    await screen.findByRole("alert");
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss error" }));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("returns to the entry when editing is cancelled", async () => {
+    render(<PasswordsTab onLocked={vi.fn()} />);
+    fireEvent.click(await screen.findByRole("button", { name: /Mail/ }));
+    fireEvent.click(await screen.findByRole("button", { name: "Edit" }));
+    fireEvent.change(screen.getByLabelText("Title"), {
+      target: { value: "Discarded" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.getByRole("heading", { name: "Mail" })).toBeVisible();
+    expect(callsTo("update_entry")).toHaveLength(0);
+  });
+
+  it("closes the new entry form when cancelled", async () => {
+    render(<PasswordsTab onLocked={vi.fn()} />);
+    await screen.findByRole("button", { name: /Mail/ });
+    fireEvent.click(screen.getByRole("button", { name: "New entry" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.getByText("Select an entry or add a new one.")).toBeVisible();
+    expect(callsTo("create_entry")).toHaveLength(0);
   });
 });

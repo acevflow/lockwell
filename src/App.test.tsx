@@ -140,4 +140,29 @@ describe("App", () => {
     render(<App />);
     expect(await screen.findByText("Your vault is locked.")).toBeVisible();
   });
+
+  it("shows that it is loading until the core answers", () => {
+    mockCommands({ vault_status: () => new Promise(() => {}) });
+    render(<App />);
+    expect(screen.getByText("Loading…")).toBeVisible();
+  });
+
+  it("opens the vault once it is created", async () => {
+    mockCommands({
+      vault_status: () => ({ exists: false, unlocked: false }),
+      create_vault: () => null,
+      ...noEntries,
+    });
+    render(<App />);
+    await screen.findByRole("heading", { name: "Create your vault" });
+    fireEvent.change(screen.getByLabelText("Master password"), {
+      target: { value: "a long test phrase" },
+    });
+    fireEvent.change(screen.getByLabelText("Confirm master password"), {
+      target: { value: "a long test phrase" },
+    });
+    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: "Create vault" }));
+    expect(await screen.findByRole("tab", { name: "Passwords" })).toBeVisible();
+  });
 });

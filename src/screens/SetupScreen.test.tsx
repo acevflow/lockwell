@@ -95,4 +95,13 @@ describe("SetupScreen", () => {
     expect(onCreated).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Create vault" })).toBeEnabled();
   });
+
+  it("never shows the typed password in an error", () => {
+    mockCommands({});
+    render(<SetupScreen onCreated={vi.fn()} onRestored={vi.fn()} />);
+    fill(GOOD_PASSWORD, "a different test phrase");
+    const alert = screen.getByRole("alert");
+    expect(alert).not.toHaveTextContent(GOOD_PASSWORD);
+    expect(alert).not.toHaveTextContent("a different test phrase");
+  });
 });
