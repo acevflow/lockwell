@@ -1,0 +1,62 @@
+# CodeQL code scanning for every project language CodeQL supports.
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Every Monday at 04:00 UTC.
+    - cron: "0 4 * * 1"
+
+# No permissions by default; the job requests only what it needs.
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      # Read the repository contents.
+      contents: read
+      # Upload the CodeQL results to code scanning.
+      security-events: write
+      # Read workflow run information (needed in private repositories).
+      actions: read
+      # Download CodeQL query packs.
+      packages: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Interface code (TypeScript and React).
+          - language: javascript-typescript
+            build-mode: none
+          # Rust core; analyzed from source without a build.
+          - language: rust
+            build-mode: none
+          # GitHub Actions workflows.
+          - language: actions
+            build-mode: none
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          category: "/language:${{ matrix.language }}"
