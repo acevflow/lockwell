@@ -1,4 +1,5 @@
-# Continuous integration: install, format, type check, lint, test and build.
+# Continuous integration: install, format, type check, lint, test with
+# coverage (report uploaded as an artifact) and build.
 name: CI
 
 on:
@@ -41,12 +42,16 @@ jobs:
           cache: npm
 
       - name: Set up Rust
-        run: rustup toolchain install stable --profile minimal --component clippy,rustfmt
+        run: rustup toolchain install stable --profile minimal --component clippy,rustfmt,llvm-tools-preview
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: src-tauri
+
+      # Coverage tool for the Rust tests; cached with the Rust dependencies.
+      - name: Install cargo-llvm-cov
+        run: cargo install cargo-llvm-cov --version 0.9.1 --locked
 
       - name: Install dependencies
         run: npm ci
@@ -60,8 +65,18 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Test
-        run: npm test
+      # Runs every test (Vitest, Rust unit and integration tests) with coverage.
+      - name: Test with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage-${{ matrix.os }}
+          path: coverage/
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Build
         run: npm run tauri build
