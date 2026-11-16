@@ -54,3 +54,36 @@ impl From<std::io::Error> for CryptoError {
         CryptoError::Io(error.kind().to_string())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io;
+
+    #[test]
+    fn io_errors_keep_only_their_kind() {
+        let error = io::Error::new(io::ErrorKind::PermissionDenied, "C:\\private\\file.txt");
+        let mapped = CryptoError::from(error);
+        assert_eq!(
+            mapped,
+            CryptoError::Io(io::ErrorKind::PermissionDenied.to_string())
+        );
+        assert!(!mapped.to_string().contains("private"));
+    }
+
+    #[test]
+    fn messages_describe_the_failure() {
+        assert_eq!(
+            CryptoError::InvalidKdfParams("too much memory").to_string(),
+            "invalid key derivation parameters: too much memory"
+        );
+        assert_eq!(
+            CryptoError::Decryption.to_string(),
+            "decryption failed: wrong key or the data is corrupted"
+        );
+        assert_eq!(
+            CryptoError::Truncated.to_string(),
+            "the encrypted data is truncated"
+        );
+    }
+}

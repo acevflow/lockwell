@@ -12,3 +12,6 @@ No message includes passwords, keys, decrypted content or file paths.
 A wrong master password and a damaged key header produce the same
 `wrong_password` error on purpose. Conversions from `CryptoError`,
 `rusqlite::Error` and `std::io::Error` are provided.
+
+Tests check the code of every variant, the messages of `NotFound` and
+`Corrupt`, and every conversion, including that I/O errors drop their paths.
