@@ -62,4 +62,55 @@ describe("SettingsTab", () => {
     submit("old test phrase", "new test phrase!");
     await vi.waitFor(() => expect(onLocked).toHaveBeenCalledOnce());
   });
+
+  it("clears every field after a change", async () => {
+    mockCommands({ change_master_password: () => null });
+    render(<SettingsTab onLocked={vi.fn()} onRestored={vi.fn()} />);
+    submit("old test phrase", "new test phrase!");
+    await screen.findByRole("status");
+    expect(screen.getByLabelText("New master password")).toHaveValue("");
+    expect(screen.getByLabelText("Confirm new master password")).toHaveValue(
+      "",
+    );
+  });
+
+  it("disables the form while changing", () => {
+    mockCommands({ change_master_password: () => new Promise(() => {}) });
+    render(<SettingsTab onLocked={vi.fn()} onRestored={vi.fn()} />);
+    submit("old test phrase", "new test phrase!");
+    expect(screen.getByRole("button", { name: "Changing…" })).toBeDisabled();
+  });
+
+  it("shows other errors with their message and no password", async () => {
+    mockCommands({
+      change_master_password: failWith("storage", "the database is busy"),
+    });
+    render(<SettingsTab onLocked={vi.fn()} onRestored={vi.fn()} />);
+    submit("old test phrase", "new test phrase!");
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("The database is busy.");
+    expect(alert).not.toHaveTextContent("old test phrase");
+    expect(alert).not.toHaveTextContent("new test phrase!");
+    expect(
+      screen.getByRole("button", { name: "Change password" }),
+    ).toBeEnabled();
+  });
+
+  it("calls onLocked when a backup finds the vault locked", async () => {
+    mockCommands({ create_backup: failWith("locked", "locked") });
+    const onLocked = vi.fn();
+    render(<SettingsTab onLocked={onLocked} onRestored={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Create backup" }));
+    await vi.waitFor(() => expect(onLocked).toHaveBeenCalledOnce());
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("shows other backup errors", async () => {
+    mockCommands({ create_backup: failWith("io", "the disk is full") });
+    render(<SettingsTab onLocked={vi.fn()} onRestored={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Create backup" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The disk is full.",
+    );
+  });
 });

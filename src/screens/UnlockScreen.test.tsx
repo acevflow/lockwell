@@ -59,4 +59,36 @@ describe("UnlockScreen", () => {
     );
     expect(callsTo("unlock_vault")).toHaveLength(0);
   });
+
+  it("shows a notice when given one", () => {
+    render(
+      <UnlockScreen onUnlocked={vi.fn()} notice="The vault was locked." />,
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "The vault was locked.",
+    );
+  });
+
+  it("shows no notice by default", () => {
+    render(<UnlockScreen onUnlocked={vi.fn()} />);
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("disables the button while unlocking", () => {
+    mockCommands({ unlock_vault: () => new Promise(() => {}) });
+    render(<UnlockScreen onUnlocked={vi.fn()} />);
+    submit("the test password");
+    expect(screen.getByRole("button", { name: "Unlocking…" })).toBeDisabled();
+  });
+
+  it("never shows the typed password in an error", async () => {
+    mockCommands({
+      unlock_vault: failWith("wrong_password", "incorrect"),
+    });
+    render(<UnlockScreen onUnlocked={vi.fn()} />);
+    submit("synthetic typed password");
+    expect(await screen.findByRole("alert")).not.toHaveTextContent(
+      "synthetic typed password",
+    );
+  });
 });
