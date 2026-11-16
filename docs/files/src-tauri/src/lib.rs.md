@@ -15,5 +15,6 @@ function builds the Tauri application:
   `unlock_vault`, `lock_vault`, `change_master_password`), the entry commands
   (`list_entries`, `get_entry`, `create_entry`, `update_entry`,
   `delete_entry`), the security commands (`touch_activity`,
-  `copy_entry_field`) and the file commands (`list_files`, `import_files`,
-  `export_file`, `delete_file`).
+  `copy_entry_field`), the file commands (`list_files`, `import_files`,
+  `export_file`, `delete_file`) and the backup commands (`create_backup`,
+  `restore_backup`).

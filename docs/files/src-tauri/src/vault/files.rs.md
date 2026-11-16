@@ -25,8 +25,10 @@ disk.
   existing destination is refused.
 - `delete_file(id)` removes the blob and the row.
 
-Paths inside the vault folder are refused as source or destination. All
-writes go through a temporary file that is renamed when complete.
+Paths inside the vault folder are refused as source or destination
+(`check_outside_vault`, also used by backups). All
+writes go through a temporary file that is renamed when complete
+(`write_atomically`, also used by backups).
 
 Tests cover empty, small, chunk-sized and large files, that names and content
 are not visible on disk, Unicode names, sorting, overwrite protection,

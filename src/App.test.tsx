@@ -97,6 +97,27 @@ describe("App", () => {
     );
   });
 
+  it("returns to the unlock screen after restoring a backup", async () => {
+    mockCommands({
+      vault_status: () => ({ exists: true, unlocked: true }),
+      restore_backup: () => true,
+      ...noEntries,
+    });
+    render(<App />);
+    fireEvent.click(await screen.findByRole("tab", { name: "Settings" }));
+    fireEvent.change(screen.getByLabelText("Backup master password"), {
+      target: { value: "old test phrase" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Choose backup and restore" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Replace vault" }));
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Backup restored.",
+    );
+    expect(screen.getByText("Your vault is locked.")).toBeVisible();
+  });
+
   it("reports activity to the core at most once per interval", async () => {
     mockCommands({
       vault_status: () => ({ exists: true, unlocked: true }),

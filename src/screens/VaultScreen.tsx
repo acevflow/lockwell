@@ -14,6 +14,8 @@ interface VaultScreenProps {
    * command reports that it is locked (without one).
    */
   onLocked: (reason?: LockReason) => void;
+  /** Called after a backup was restored; the vault is then locked. */
+  onRestored: () => void;
 }
 
 const TABS = [
@@ -29,7 +31,7 @@ type TabId = (typeof TABS)[number]["id"];
  * component tree, so it is discarded when the vault locks and this screen
  * unmounts.
  */
-function VaultScreen({ onLock, onLocked }: VaultScreenProps) {
+function VaultScreen({ onLock, onLocked, onRestored }: VaultScreenProps) {
   const [tab, setTab] = useState<TabId>("passwords");
   useActivityReporter();
   useVaultLockedEvent(onLocked);
@@ -66,7 +68,9 @@ function VaultScreen({ onLock, onLocked }: VaultScreenProps) {
       >
         {tab === "passwords" && <PasswordsTab onLocked={onLocked} />}
         {tab === "files" && <FilesTab onLocked={onLocked} />}
-        {tab === "settings" && <SettingsTab onLocked={onLocked} />}
+        {tab === "settings" && (
+          <SettingsTab onLocked={onLocked} onRestored={onRestored} />
+        )}
       </main>
     </div>
   );

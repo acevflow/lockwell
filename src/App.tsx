@@ -10,13 +10,16 @@ type Phase =
   | { kind: "loading" }
   | { kind: "failed"; message: string }
   | { kind: "setup" }
-  | { kind: "locked"; reason?: LockReason }
+  | { kind: "locked"; notice?: string }
   | { kind: "unlocked" };
 
 const LOCK_NOTICES: Record<LockReason, string> = {
   idle: "The vault was locked after 5 minutes of inactivity.",
   systemLock: "The vault was locked because Windows was locked.",
 };
+
+const RESTORED_NOTICE =
+  "Backup restored. Unlock it with the master password it had when the backup was made.";
 
 /**
  * Root component of the interface. It asks the core for the vault status
@@ -42,7 +45,16 @@ function App() {
   }, []);
 
   const showLocked = useCallback(
-    (reason?: LockReason) => setPhase({ kind: "locked", reason }),
+    (reason?: LockReason) =>
+      setPhase({
+        kind: "locked",
+        notice: reason ? LOCK_NOTICES[reason] : undefined,
+      }),
+    [],
+  );
+
+  const showRestored = useCallback(
+    () => setPhase({ kind: "locked", notice: RESTORED_NOTICE }),
     [],
   );
 
@@ -71,16 +83,27 @@ function App() {
         </main>
       );
     case "setup":
-      return <SetupScreen onCreated={() => setPhase({ kind: "unlocked" })} />;
+      return (
+        <SetupScreen
+          onCreated={() => setPhase({ kind: "unlocked" })}
+          onRestored={showRestored}
+        />
+      );
     case "locked":
       return (
         <UnlockScreen
-          notice={phase.reason ? LOCK_NOTICES[phase.reason] : undefined}
+          notice={phase.notice}
           onUnlocked={() => setPhase({ kind: "unlocked" })}
         />
       );
     case "unlocked":
-      return <VaultScreen onLock={lock} onLocked={showLocked} />;
+      return (
+        <VaultScreen
+          onLock={lock}
+          onLocked={showLocked}
+          onRestored={showRestored}
+        />
+      );
   }
 }
 

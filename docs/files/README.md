@@ -29,38 +29,42 @@ how it fits in the project.
 | [`api/vault.ts`](src/api/vault.ts.md)             | Vault commands.                          |
 | [`api/entries.ts`](src/api/entries.ts.md)         | Entry commands.                          |
 | [`api/files.ts`](src/api/files.ts.md)             | File commands.                           |
+| [`api/backup.ts`](src/api/backup.ts.md)           | Backup commands.                         |
 | [`api/security.ts`](src/api/security.ts.md)       | Activity, copy and lock-event bindings.  |
 
 ### Screens (`src/screens/`)
 
-| File                                                                    | Description                             |
-| ----------------------------------------------------------------------- | --------------------------------------- |
-| [`screens/SetupScreen.tsx`](src/screens/SetupScreen.tsx.md)             | Create the vault.                       |
-| [`screens/SetupScreen.test.tsx`](src/screens/SetupScreen.test.tsx.md)   | Tests for the setup screen.             |
-| [`screens/UnlockScreen.tsx`](src/screens/UnlockScreen.tsx.md)           | Unlock with the master password.        |
-| [`screens/UnlockScreen.test.tsx`](src/screens/UnlockScreen.test.tsx.md) | Tests for the unlock screen.            |
-| [`screens/VaultScreen.tsx`](src/screens/VaultScreen.tsx.md)             | Unlocked vault: tabs and Lock button.   |
-| [`screens/PasswordsTab.tsx`](src/screens/PasswordsTab.tsx.md)           | Password entries.                       |
-| [`screens/PasswordsTab.test.tsx`](src/screens/PasswordsTab.test.tsx.md) | Tests for the password entries section. |
-| [`screens/FilesTab.tsx`](src/screens/FilesTab.tsx.md)                   | Encrypted files.                        |
-| [`screens/FilesTab.test.tsx`](src/screens/FilesTab.test.tsx.md)         | Tests for the files section.            |
-| [`screens/SettingsTab.tsx`](src/screens/SettingsTab.tsx.md)             | Settings: change the master password.   |
-| [`screens/SettingsTab.test.tsx`](src/screens/SettingsTab.test.tsx.md)   | Tests for the settings section.         |
+| File                                                                    | Description                                    |
+| ----------------------------------------------------------------------- | ---------------------------------------------- |
+| [`screens/SetupScreen.tsx`](src/screens/SetupScreen.tsx.md)             | Create the vault or restore a backup.          |
+| [`screens/SetupScreen.test.tsx`](src/screens/SetupScreen.test.tsx.md)   | Tests for the setup screen.                    |
+| [`screens/UnlockScreen.tsx`](src/screens/UnlockScreen.tsx.md)           | Unlock with the master password.               |
+| [`screens/UnlockScreen.test.tsx`](src/screens/UnlockScreen.test.tsx.md) | Tests for the unlock screen.                   |
+| [`screens/VaultScreen.tsx`](src/screens/VaultScreen.tsx.md)             | Unlocked vault: tabs and Lock button.          |
+| [`screens/PasswordsTab.tsx`](src/screens/PasswordsTab.tsx.md)           | Password entries.                              |
+| [`screens/PasswordsTab.test.tsx`](src/screens/PasswordsTab.test.tsx.md) | Tests for the password entries section.        |
+| [`screens/FilesTab.tsx`](src/screens/FilesTab.tsx.md)                   | Encrypted files.                               |
+| [`screens/FilesTab.test.tsx`](src/screens/FilesTab.test.tsx.md)         | Tests for the files section.                   |
+| [`screens/SettingsTab.tsx`](src/screens/SettingsTab.tsx.md)             | Settings: master password, backup and restore. |
+| [`screens/SettingsTab.test.tsx`](src/screens/SettingsTab.test.tsx.md)   | Tests for the settings section.                |
 
 ### Components and hooks (`src/components/`, `src/hooks/`)
 
-| File                                                                      | Description                              |
-| ------------------------------------------------------------------------- | ---------------------------------------- |
-| [`components/PasswordInput.tsx`](src/components/PasswordInput.tsx.md)     | Password field with Show/Hide.           |
-| [`components/ErrorBanner.tsx`](src/components/ErrorBanner.tsx.md)         | Announced error message.                 |
-| [`components/ConfirmDialog.tsx`](src/components/ConfirmDialog.tsx.md)     | Confirmation for destructive actions.    |
-| [`components/EntryList.tsx`](src/components/EntryList.tsx.md)             | List of entries.                         |
-| [`components/EntryForm.tsx`](src/components/EntryForm.tsx.md)             | Create or edit an entry.                 |
-| [`components/EntryView.tsx`](src/components/EntryView.tsx.md)             | Read-only entry with masked password.    |
-| [`components/components.test.tsx`](src/components/components.test.tsx.md) | Tests for the small components.          |
-| [`hooks/useApiError.ts`](src/hooks/useApiError.ts.md)                     | Error state that handles a locked vault. |
-| [`hooks/useActivityReporter.ts`](src/hooks/useActivityReporter.ts.md)     | Reports user activity to the core.       |
-| [`hooks/useVaultLockedEvent.ts`](src/hooks/useVaultLockedEvent.ts.md)     | Reacts to the lock event.                |
+| File                                                                          | Description                              |
+| ----------------------------------------------------------------------------- | ---------------------------------------- |
+| [`components/PasswordInput.tsx`](src/components/PasswordInput.tsx.md)         | Password field with Show/Hide.           |
+| [`components/ErrorBanner.tsx`](src/components/ErrorBanner.tsx.md)             | Announced error message.                 |
+| [`components/ConfirmDialog.tsx`](src/components/ConfirmDialog.tsx.md)         | Confirmation for destructive actions.    |
+| [`components/EntryList.tsx`](src/components/EntryList.tsx.md)                 | List of entries.                         |
+| [`components/EntryForm.tsx`](src/components/EntryForm.tsx.md)                 | Create or edit an entry.                 |
+| [`components/EntryView.tsx`](src/components/EntryView.tsx.md)                 | Read-only entry with masked password.    |
+| [`components/components.test.tsx`](src/components/components.test.tsx.md)     | Tests for the small components.          |
+| [`components/CreateBackupPanel.tsx`](src/components/CreateBackupPanel.tsx.md) | Create an encrypted backup.              |
+| [`components/RestoreBackupForm.tsx`](src/components/RestoreBackupForm.tsx.md) | Restore a backup.                        |
+| [`components/backup.test.tsx`](src/components/backup.test.tsx.md)             | Tests for the backup components.         |
+| [`hooks/useApiError.ts`](src/hooks/useApiError.ts.md)                         | Error state that handles a locked vault. |
+| [`hooks/useActivityReporter.ts`](src/hooks/useActivityReporter.ts.md)         | Reports user activity to the core.       |
+| [`hooks/useVaultLockedEvent.ts`](src/hooks/useVaultLockedEvent.ts.md)         | Reacts to the lock event.                |
 
 ### Tests (`src/test/`)
 
@@ -87,6 +91,7 @@ how it fits in the project.
 | [`commands/vault.rs`](src-tauri/src/commands/vault.rs.md)       | Create, unlock, lock, change master password.  |
 | [`commands/entries.rs`](src-tauri/src/commands/entries.rs.md)   | List, read, create, update and delete entries. |
 | [`commands/files.rs`](src-tauri/src/commands/files.rs.md)       | File commands with native dialogs.             |
+| [`commands/backup.rs`](src-tauri/src/commands/backup.rs.md)     | Backup commands with native dialogs.           |
 | [`commands/security.rs`](src-tauri/src/commands/security.rs.md) | Activity and copying to the clipboard.         |
 
 ### Vault (`src-tauri/src/vault/`)
@@ -99,6 +104,7 @@ how it fits in the project.
 | [`vault/session.rs`](src-tauri/src/vault/session.rs.md)                 | `Vault`: create, unlock, lock, change password.     |
 | [`vault/entries.rs`](src-tauri/src/vault/entries.rs.md)                 | Encrypted password entries and their validation.    |
 | [`vault/files.rs`](src-tauri/src/vault/files.rs.md)                     | Encrypted files: import, list, export, delete.      |
+| [`vault/backup.rs`](src-tauri/src/vault/backup.rs.md)                   | Encrypted backup and restore.                       |
 
 ### Security (`src-tauri/src/security/`)
 

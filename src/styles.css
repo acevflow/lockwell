@@ -471,3 +471,16 @@ button.small {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* Backup */
+
+.switch-mode {
+  display: block;
+  margin: 16px auto 0;
+  color: var(--accent);
+}
+
+.card .panel {
+  padding: 0;
+  border: none;
+}

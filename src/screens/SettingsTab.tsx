@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { ApiError, errorMessage, isLockedError } from "../api/client";
 import { changeMasterPassword } from "../api/vault";
+import CreateBackupPanel from "../components/CreateBackupPanel";
 import ErrorBanner from "../components/ErrorBanner";
 import PasswordInput from "../components/PasswordInput";
+import RestoreBackupForm from "../components/RestoreBackupForm";
 import {
   MIN_MASTER_PASSWORD_CHARS,
   masterPasswordProblem,
@@ -11,10 +13,20 @@ import {
 interface SettingsTabProps {
   /** Called when the core reports that the vault is locked. */
   onLocked: () => void;
+  /** Called after a backup was restored; the vault is then locked. */
+  onRestored: () => void;
 }
 
-/** Vault settings: change the master password. */
-function SettingsTab({ onLocked }: SettingsTabProps) {
+/** Vault settings: master password, backup and restore. */
+function SettingsTab({ onLocked, onRestored }: SettingsTabProps) {
+  function backupError(cause: unknown): string | null {
+    if (isLockedError(cause)) {
+      onLocked();
+      return null;
+    }
+    return errorMessage(cause);
+  }
+
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -109,6 +121,8 @@ function SettingsTab({ onLocked }: SettingsTabProps) {
           </button>
         </div>
       </form>
+      <CreateBackupPanel onError={backupError} />
+      <RestoreBackupForm replacesVault onRestored={onRestored} />
     </div>
   );
 }
