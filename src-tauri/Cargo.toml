@@ -1,6 +1,6 @@
 [package]
 name = "lockwell"
-version = "0.0.0"
+version = "0.1.0"
 description = "A local-only, encrypted password and file manager for the desktop."
 authors = ["acevflow"]
 license = "GPL-3.0-or-later"

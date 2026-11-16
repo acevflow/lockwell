@@ -37,6 +37,7 @@ function fakeCore() {
       return entry;
     },
     create_entry: ({ entry }) => {
+      rejectUnknownFields(entry);
       const id = String(++next).padStart(32, "c");
       store.set(id, {
         ...(entry as EntryInput),
@@ -47,6 +48,7 @@ function fakeCore() {
       return id;
     },
     update_entry: ({ id, entry }) => {
+      rejectUnknownFields(entry);
       const existing = store.get(id as string)!;
       store.set(id as string, { ...existing, ...(entry as EntryInput) });
       return null;
@@ -56,6 +58,17 @@ function fakeCore() {
       return null;
     },
   });
+}
+
+/** Mirrors `deny_unknown_fields` on `EntryInput` in the core. */
+function rejectUnknownFields(entry: unknown) {
+  const allowed = ["title", "username", "password", "url", "notes"];
+  const unknown = Object.keys(entry as object).filter(
+    (key) => !allowed.includes(key),
+  );
+  if (unknown.length > 0) {
+    throw { code: "invalid_input", message: `unknown field ${unknown[0]}` };
+  }
 }
 
 function makeEntry(

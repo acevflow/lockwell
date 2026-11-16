@@ -7,6 +7,7 @@ how it fits in the project.
 
 | File                                                        | Description                                             |
 | ----------------------------------------------------------- | ------------------------------------------------------- |
+| [`index.html`](index.html.md)                               | Interface entry page.                                   |
 | [`src/main.tsx`](src/main.tsx.md)                           | Mounts the React app into the page.                     |
 | [`src/App.tsx`](src/App.tsx.md)                             | Root component: picks the screen from the vault status. |
 | [`src/App.test.tsx`](src/App.test.tsx.md)                   | Tests for the root component.                           |
@@ -75,13 +76,15 @@ how it fits in the project.
 
 ## Core (`src-tauri/`)
 
-| File                                                  | Description                               |
-| ----------------------------------------------------- | ----------------------------------------- |
-| [`src-tauri/src/main.rs`](src-tauri/src/main.rs.md)   | Desktop binary entry point.               |
-| [`src-tauri/src/lib.rs`](src-tauri/src/lib.rs.md)     | Builds and runs the Tauri application.    |
-| [`src-tauri/build.rs`](src-tauri/build.rs.md)         | Tauri build script.                       |
-| [`src-tauri/src/error.rs`](src-tauri/src/error.rs.md) | `AppError`, serialized for the interface. |
-| [`src-tauri/src/state.rs`](src-tauri/src/state.rs.md) | Shared state: the vault behind a mutex.   |
+| File                                                                            | Description                               |
+| ------------------------------------------------------------------------------- | ----------------------------------------- |
+| [`src-tauri/src/main.rs`](src-tauri/src/main.rs.md)                             | Desktop binary entry point.               |
+| [`src-tauri/src/lib.rs`](src-tauri/src/lib.rs.md)                               | Builds and runs the Tauri application.    |
+| [`src-tauri/build.rs`](src-tauri/build.rs.md)                                   | Tauri build script.                       |
+| [`src-tauri/tauri.conf.json`](src-tauri/tauri.conf.json.md)                     | Tauri configuration, CSP and window.      |
+| [`src-tauri/capabilities/default.json`](src-tauri/capabilities/default.json.md) | Minimal window capability.                |
+| [`src-tauri/src/error.rs`](src-tauri/src/error.rs.md)                           | `AppError`, serialized for the interface. |
+| [`src-tauri/src/state.rs`](src-tauri/src/state.rs.md)                           | Shared state: the vault behind a mutex.   |
 
 ### Commands (`src-tauri/src/commands/`)
 

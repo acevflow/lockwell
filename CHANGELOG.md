@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-16
+
+First beta. It has not been audited.
+
 ### Added
 
 - `README.md` with the project overview, planned features, status, tech stack,
@@ -50,4 +54,12 @@ and this project adheres to
   current vault or on a new computer. A restore is fully checked before it
   replaces anything.
 
-[Unreleased]: https://github.com/acevflow/lockwell/commits/main
+### Security
+
+- Strict Content Security Policy for the interface, frozen JavaScript
+  prototypes, and a minimal window capability: the interface can only call the
+  app commands and listen for the lock event. File dialogs and the clipboard
+  are used from the core.
+
+[Unreleased]: https://github.com/acevflow/lockwell/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/acevflow/lockwell/releases/tag/v0.1.0
