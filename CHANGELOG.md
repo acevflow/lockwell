@@ -25,5 +25,9 @@ and this project adheres to
 - Cryptographic core: Argon2id key derivation, XChaCha20-Poly1305 record
   encryption and chunked STREAM encryption for large data, built on the
   RustCrypto crates and tested with published test vectors and failure cases.
+- Vault storage: local SQLite database with encrypted records, a vault key
+  wrapped with a key derived from the master password, and commands to create,
+  unlock and lock the vault and to change the master password (at least
+  12 characters).
 
 [Unreleased]: https://github.com/acevflow/lockwell/commits/main
