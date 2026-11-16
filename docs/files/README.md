@@ -22,16 +22,17 @@ how it fits in the project.
 
 ### Command client (`src/api/`)
 
-| File                                              | Description                              |
-| ------------------------------------------------- | ---------------------------------------- |
-| [`api/types.ts`](src/api/types.ts.md)             | Types shared with the core.              |
-| [`api/client.ts`](src/api/client.ts.md)           | `call()`, `ApiError` and error messages. |
-| [`api/client.test.ts`](src/api/client.test.ts.md) | Tests for the command client.            |
-| [`api/vault.ts`](src/api/vault.ts.md)             | Vault commands.                          |
-| [`api/entries.ts`](src/api/entries.ts.md)         | Entry commands.                          |
-| [`api/files.ts`](src/api/files.ts.md)             | File commands.                           |
-| [`api/backup.ts`](src/api/backup.ts.md)           | Backup commands.                         |
-| [`api/security.ts`](src/api/security.ts.md)       | Activity, copy and lock-event bindings.  |
+| File                                              | Description                                         |
+| ------------------------------------------------- | --------------------------------------------------- |
+| [`api/types.ts`](src/api/types.ts.md)             | Types shared with the core.                         |
+| [`api/client.ts`](src/api/client.ts.md)           | `call()`, `ApiError` and error messages.            |
+| [`api/client.test.ts`](src/api/client.test.ts.md) | Tests for the command client.                       |
+| [`api/vault.ts`](src/api/vault.ts.md)             | Vault commands.                                     |
+| [`api/entries.ts`](src/api/entries.ts.md)         | Entry commands.                                     |
+| [`api/files.ts`](src/api/files.ts.md)             | File commands.                                      |
+| [`api/backup.ts`](src/api/backup.ts.md)           | Backup commands.                                    |
+| [`api/security.ts`](src/api/security.ts.md)       | Activity, copy and lock-event bindings.             |
+| [`api/api.test.ts`](src/api/api.test.ts.md)       | Tests for every command wrapper and the lock event. |
 
 ### Screens (`src/screens/`)
 
