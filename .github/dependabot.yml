@@ -10,6 +10,11 @@ updates:
     commit-message:
       prefix: "chore(deps)"
       prefix-development: "chore(deps)"
+    ignore:
+      # typescript-eslint does not support TypeScript 7 yet.
+      - dependency-name: "typescript"
+        update-types:
+          - "version-update:semver-major"
     groups:
       # Minor and patch updates are grouped; major updates get their own PR.
       npm-production:
