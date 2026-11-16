@@ -84,21 +84,43 @@ git clone https://github.com/acevflow/lockwell.git
 cd lockwell
 ```
 
-The application skeleton is being built in Phase 1. The commands to install
-dependencies, run the app, run the tests and build it will be documented here
-and in the [contributing guide](CONTRIBUTING.md) as soon as they exist.
+### Common commands
+
+Run these from the repository root:
+
+| Task                         | Command                |
+| ---------------------------- | ---------------------- |
+| Install dependencies         | `npm ci`               |
+| Run the app in development   | `npm run tauri dev`    |
+| Build the desktop app        | `npm run tauri build`  |
+| Run the tests (Vitest, Rust) | `npm test`             |
+| Lint (ESLint, clippy)        | `npm run lint`         |
+| Check formatting             | `npm run format:check` |
+| Format the code              | `npm run format`       |
+| Type check                   | `npm run typecheck`    |
+
+See the [contributing guide](CONTRIBUTING.md) for more details.
 
 ## Project structure
 
-The planned layout of the repository is:
+The layout of the repository is:
 
 ```text
 lockwell/
 ├── src-tauri/        # Rust core: cryptography, vault and storage
+│   ├── src/          # Rust source code
+│   ├── capabilities/ # Tauri permissions for the app windows
+│   ├── icons/        # Application icons
+│   └── tauri.conf.json
 ├── src/              # TypeScript and React interface
+│   └── test/         # Test setup
 ├── docs/             # Project documentation
 │   └── files/        # One document per code file, with an index (README.md)
-├── .github/          # CI workflows and security configuration
+├── .github/          # CI workflows and security configuration (planned)
+├── index.html        # Interface entry page
+├── package.json      # npm scripts and dependencies
+├── vite.config.ts    # Vite and Vitest configuration
+├── eslint.config.js  # ESLint configuration
 ├── CHANGELOG.md
 ├── CODE_OF_CONDUCT.md
 ├── CONTRIBUTING.md
