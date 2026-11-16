@@ -97,6 +97,11 @@ npm run tauri build
 # Run all tests: Vitest for the interface, then cargo test for the core
 npm test
 
+# Run all tests with coverage; reports go to coverage/frontend and coverage/core
+# (needs `rustup component add llvm-tools-preview` and
+# `cargo install cargo-llvm-cov --locked`)
+npm run test:coverage
+
 # Lint: ESLint for TypeScript and React, clippy (warnings as errors) for Rust
 npm run lint
 

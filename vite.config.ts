@@ -34,5 +34,19 @@ export default defineConfig(() => ({
   test: {
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
+    // Coverage of the interface code, written to coverage/frontend.
+    coverage: {
+      provider: "v8" as const,
+      reportsDirectory: "./coverage/frontend",
+      reporter: ["text", "html", "lcov"],
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: [
+        "src/**/*.test.{ts,tsx}",
+        "src/test/**",
+        "src/main.tsx",
+        "src/vite-env.d.ts",
+        "src/api/types.ts",
+      ],
+    },
   },
 }));
