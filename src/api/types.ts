@@ -34,6 +34,16 @@ export interface Entry extends EntryInput {
   updatedAt: number;
 }
 
+/** A file stored in the vault. */
+export interface FileSummary {
+  id: string;
+  name: string;
+  /** Size of the original content, in bytes. */
+  size: number;
+  /** Milliseconds since the Unix epoch. */
+  createdAt: number;
+}
+
 /** Stable error codes returned by the core. */
 export type ErrorCode =
   | "wrong_password"

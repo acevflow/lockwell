@@ -34,10 +34,19 @@ pub struct VaultStatus {
     pub unlocked: bool,
 }
 
-/// State of an unlocked vault: the open database and the vault key.
+/// State of an unlocked vault: the vault folder, the open database and the
+/// vault key.
 pub struct UnlockedVault {
+    pub(crate) dir: PathBuf,
     pub(crate) conn: Connection,
     pub(crate) key: SecretKey,
+}
+
+impl UnlockedVault {
+    /// Folder that holds the encrypted files.
+    pub(crate) fn files_dir(&self) -> PathBuf {
+        self.dir.join(FILES_DIR)
+    }
 }
 
 /// The vault stored in one folder.
@@ -120,7 +129,11 @@ impl Vault {
         fs::rename(&temporary, self.database_path())?;
 
         let conn = db::open(&self.database_path())?;
-        self.unlocked = Some(UnlockedVault { conn, key });
+        self.unlocked = Some(UnlockedVault {
+            dir: self.dir.clone(),
+            conn,
+            key,
+        });
         Ok(())
     }
 
@@ -136,7 +149,11 @@ impl Vault {
         let conn = db::open(&self.database_path())?;
         let header = read_header(&conn)?;
         let key = header.unwrap_key(password.as_bytes())?;
-        self.unlocked = Some(UnlockedVault { conn, key });
+        self.unlocked = Some(UnlockedVault {
+            dir: self.dir.clone(),
+            conn,
+            key,
+        });
         Ok(())
     }
 

@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { LockReason } from "../api/security";
 import { useActivityReporter } from "../hooks/useActivityReporter";
 import { useVaultLockedEvent } from "../hooks/useVaultLockedEvent";
+import FilesTab from "./FilesTab";
 import PasswordsTab from "./PasswordsTab";
 import SettingsTab from "./SettingsTab";
 
@@ -17,6 +18,7 @@ interface VaultScreenProps {
 
 const TABS = [
   { id: "passwords", label: "Passwords" },
+  { id: "files", label: "Files" },
   { id: "settings", label: "Settings" },
 ] as const;
 
@@ -63,6 +65,7 @@ function VaultScreen({ onLock, onLocked }: VaultScreenProps) {
         className="tab-panel"
       >
         {tab === "passwords" && <PasswordsTab onLocked={onLocked} />}
+        {tab === "files" && <FilesTab onLocked={onLocked} />}
         {tab === "settings" && <SettingsTab onLocked={onLocked} />}
       </main>
     </div>

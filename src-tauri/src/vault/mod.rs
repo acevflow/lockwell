@@ -2,6 +2,7 @@
 //! session and the password entries.
 
 pub mod entries;
+pub mod files;
 pub mod header;
 pub mod password_policy;
 pub mod session;

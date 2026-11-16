@@ -42,5 +42,8 @@ and this project adheres to
 - Copy a username or password to the clipboard straight from the core; it is
   cleared after 30 seconds (or when the vault locks) if still there, and on
   Windows it is kept out of the clipboard history and cloud sync.
+- Encrypted files: add files to the vault, save decrypted copies and delete
+  them. Content is encrypted in 64 KiB chunks and file names are encrypted
+  too; the files on disk are named with random ids.
 
 [Unreleased]: https://github.com/acevflow/lockwell/commits/main

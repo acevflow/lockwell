@@ -20,6 +20,7 @@ const VAULT_DIR: &str = "vault";
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let vault_dir = app.path().app_data_dir()?.join(VAULT_DIR);
             app.manage(AppState::new(Vault::new(vault_dir)));
@@ -43,6 +44,10 @@ pub fn run() {
             commands::entries::delete_entry,
             commands::security::touch_activity,
             commands::security::copy_entry_field,
+            commands::files::list_files,
+            commands::files::import_files,
+            commands::files::export_file,
+            commands::files::delete_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
