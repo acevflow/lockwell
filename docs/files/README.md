@@ -5,13 +5,61 @@ how it fits in the project.
 
 ## Interface (`src/`)
 
-| File                                        | Description                         |
-| ------------------------------------------- | ----------------------------------- |
-| [`src/main.tsx`](src/main.tsx.md)           | Mounts the React app into the page. |
-| [`src/App.tsx`](src/App.tsx.md)             | Root component of the interface.    |
-| [`src/App.test.tsx`](src/App.test.tsx.md)   | Smoke test for the root component.  |
-| [`src/test/setup.ts`](src/test/setup.ts.md) | Vitest setup for Testing Library.   |
-| [`src/vite-env.d.ts`](src/vite-env.d.ts.md) | Vite client type declarations.      |
+| File                                                        | Description                                             |
+| ----------------------------------------------------------- | ------------------------------------------------------- |
+| [`src/main.tsx`](src/main.tsx.md)                           | Mounts the React app into the page.                     |
+| [`src/App.tsx`](src/App.tsx.md)                             | Root component: picks the screen from the vault status. |
+| [`src/App.test.tsx`](src/App.test.tsx.md)                   | Tests for the root component.                           |
+| [`src/styles.css`](src/styles.css.md)                       | Global styles, light and dark themes.                   |
+| [`src/passwordRules.ts`](src/passwordRules.ts.md)           | Master password rules mirrored from the core.           |
+| [`src/passwordRules.test.ts`](src/passwordRules.test.ts.md) | Tests for the master password rules.                    |
+| [`src/entryRules.ts`](src/entryRules.ts.md)                 | Entry field limits and search.                          |
+| [`src/entryRules.test.ts`](src/entryRules.test.ts.md)       | Tests for the entry search.                             |
+| [`src/vite-env.d.ts`](src/vite-env.d.ts.md)                 | Vite client type declarations.                          |
+
+### Command client (`src/api/`)
+
+| File                                              | Description                              |
+| ------------------------------------------------- | ---------------------------------------- |
+| [`api/types.ts`](src/api/types.ts.md)             | Types shared with the core.              |
+| [`api/client.ts`](src/api/client.ts.md)           | `call()`, `ApiError` and error messages. |
+| [`api/client.test.ts`](src/api/client.test.ts.md) | Tests for the command client.            |
+| [`api/vault.ts`](src/api/vault.ts.md)             | Vault commands.                          |
+| [`api/entries.ts`](src/api/entries.ts.md)         | Entry commands.                          |
+
+### Screens (`src/screens/`)
+
+| File                                                                    | Description                             |
+| ----------------------------------------------------------------------- | --------------------------------------- |
+| [`screens/SetupScreen.tsx`](src/screens/SetupScreen.tsx.md)             | Create the vault.                       |
+| [`screens/SetupScreen.test.tsx`](src/screens/SetupScreen.test.tsx.md)   | Tests for the setup screen.             |
+| [`screens/UnlockScreen.tsx`](src/screens/UnlockScreen.tsx.md)           | Unlock with the master password.        |
+| [`screens/UnlockScreen.test.tsx`](src/screens/UnlockScreen.test.tsx.md) | Tests for the unlock screen.            |
+| [`screens/VaultScreen.tsx`](src/screens/VaultScreen.tsx.md)             | Unlocked vault: tabs and Lock button.   |
+| [`screens/PasswordsTab.tsx`](src/screens/PasswordsTab.tsx.md)           | Password entries.                       |
+| [`screens/PasswordsTab.test.tsx`](src/screens/PasswordsTab.test.tsx.md) | Tests for the password entries section. |
+| [`screens/SettingsTab.tsx`](src/screens/SettingsTab.tsx.md)             | Settings: change the master password.   |
+| [`screens/SettingsTab.test.tsx`](src/screens/SettingsTab.test.tsx.md)   | Tests for the settings section.         |
+
+### Components and hooks (`src/components/`, `src/hooks/`)
+
+| File                                                                      | Description                              |
+| ------------------------------------------------------------------------- | ---------------------------------------- |
+| [`components/PasswordInput.tsx`](src/components/PasswordInput.tsx.md)     | Password field with Show/Hide.           |
+| [`components/ErrorBanner.tsx`](src/components/ErrorBanner.tsx.md)         | Announced error message.                 |
+| [`components/ConfirmDialog.tsx`](src/components/ConfirmDialog.tsx.md)     | Confirmation for destructive actions.    |
+| [`components/EntryList.tsx`](src/components/EntryList.tsx.md)             | List of entries.                         |
+| [`components/EntryForm.tsx`](src/components/EntryForm.tsx.md)             | Create or edit an entry.                 |
+| [`components/EntryView.tsx`](src/components/EntryView.tsx.md)             | Read-only entry with masked password.    |
+| [`components/components.test.tsx`](src/components/components.test.tsx.md) | Tests for the small components.          |
+| [`hooks/useApiError.ts`](src/hooks/useApiError.ts.md)                     | Error state that handles a locked vault. |
+
+### Tests (`src/test/`)
+
+| File                                            | Description                         |
+| ----------------------------------------------- | ----------------------------------- |
+| [`test/setup.ts`](src/test/setup.ts.md)         | Vitest setup and Tauri mock.        |
+| [`test/tauriMock.ts`](src/test/tauriMock.ts.md) | Helpers to fake the Tauri commands. |
 
 ## Core (`src-tauri/`)
 

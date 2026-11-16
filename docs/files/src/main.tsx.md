@@ -1,4 +1,4 @@
 # src/main.tsx
 
-Entry point of the interface. It finds the `#root` element in `index.html` and
-renders the `App` component inside `React.StrictMode`.
+Mounts the React app into the page and loads the global styles
+(`styles.css`).
