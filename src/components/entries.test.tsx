@@ -83,6 +83,32 @@ describe("EntryForm", () => {
     );
   });
 
+  it("submits what was typed in every field", async () => {
+    const { onSubmit } = renderForm();
+    const typed = {
+      Title: "Typed title",
+      Username: "typed-user",
+      Password: "typed-password",
+      Website: "https://typed.example.test",
+      Notes: "Typed notes",
+    };
+
+    for (const [label, value] of Object.entries(typed)) {
+      fireEvent.change(screen.getByLabelText(label), { target: { value } });
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await vi.waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledExactlyOnceWith({
+        title: typed.Title,
+        username: typed.Username,
+        password: typed.Password,
+        url: typed.Website,
+        notes: typed.Notes,
+      }),
+    );
+  });
+
   it("starts empty without an initial entry", () => {
     renderForm();
 

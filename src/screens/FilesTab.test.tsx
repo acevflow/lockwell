@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { ApiError } from "../api/client";
 import type { FileSummary } from "../api/types";
 import { callsTo, failWith, mockCommands } from "../test/tauriMock";
 import FilesTab from "./FilesTab";
@@ -100,6 +101,19 @@ describe("FilesTab", () => {
     const onLocked = vi.fn();
     render(<FilesTab onLocked={onLocked} />);
     await vi.waitFor(() => expect(onLocked).toHaveBeenCalledOnce());
+  });
+
+  it("ignores a list that fails after leaving the tab", async () => {
+    let fail!: (reason: unknown) => void;
+    mockCommands({
+      list_files: () => new Promise((_, reject) => (fail = reject)),
+    });
+    const onLocked = vi.fn();
+    const { unmount } = render(<FilesTab onLocked={onLocked} />);
+    unmount();
+    fail(new ApiError("locked", "the vault is locked"));
+    await act(() => Promise.resolve());
+    expect(onLocked).not.toHaveBeenCalled();
   });
 
   it("shows that the list is loading", () => {

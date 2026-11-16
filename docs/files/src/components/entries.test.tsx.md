@@ -1,6 +1,7 @@
 # src/components/entries.test.tsx
 
-Tests for the entry components. `EntryForm`: only editable fields are
+Tests for the entry components. `EntryForm`: every typed field and only the
+editable fields of the initial entry are
 submitted, empty start, field limits, the required title, save errors, the
 busy state and cancelling. `EntryList`: the empty message, titles and
 usernames, the selected entry and selecting by id. `EntryView`: masked

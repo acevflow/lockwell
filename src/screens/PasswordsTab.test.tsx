@@ -283,6 +283,21 @@ describe("PasswordsTab", () => {
     );
   });
 
+  it("shows the new entry and an error when the list cannot be refreshed", async () => {
+    render(<PasswordsTab onLocked={vi.fn()} />);
+    await screen.findByRole("button", { name: /Mail/ });
+    coreFailing("list_entries", "storage", "the database is busy");
+    fireEvent.click(screen.getByRole("button", { name: "New entry" }));
+    fireEvent.change(screen.getByLabelText("Title"), {
+      target: { value: "Forum" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Add entry" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The database is busy.",
+    );
+    expect(screen.getByRole("heading", { name: "Forum" })).toBeVisible();
+  });
+
   it("shows that the list is loading", () => {
     mockCommands({ list_entries: () => new Promise(() => {}) });
     render(<PasswordsTab onLocked={vi.fn()} />);
