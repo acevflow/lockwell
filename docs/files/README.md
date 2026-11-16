@@ -67,6 +67,7 @@ how it fits in the project.
 | [`hooks/useApiError.ts`](src/hooks/useApiError.ts.md)                         | Error state that handles a locked vault. |
 | [`hooks/useActivityReporter.ts`](src/hooks/useActivityReporter.ts.md)         | Reports user activity to the core.       |
 | [`hooks/useVaultLockedEvent.ts`](src/hooks/useVaultLockedEvent.ts.md)         | Reacts to the lock event.                |
+| [`hooks/hooks.test.tsx`](src/hooks/hooks.test.tsx.md)                         | Tests for the hooks.                     |
 
 ### Tests (`src/test/`)
 
