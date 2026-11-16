@@ -136,6 +136,16 @@ how it fits in the project.
 | [`crypto/aead.rs`](src-tauri/src/crypto/aead.rs.md)     | XChaCha20-Poly1305 for single records.           |
 | [`crypto/stream.rs`](src-tauri/src/crypto/stream.rs.md) | Chunked STREAM encryption for files and backups. |
 
+### Integration tests (`src-tauri/tests/`)
+
+| File                                                                      | Description                                          |
+| ------------------------------------------------------------------------- | ---------------------------------------------------- |
+| [`tests/common/mod.rs`](src-tauri/tests/common/mod.rs.md)                 | Shared fixtures: workspace, entries, clipboard.      |
+| [`tests/vault_lifecycle.rs`](src-tauri/tests/vault_lifecycle.rs.md)       | Create, lock, unlock, change password, reopen.       |
+| [`tests/entries_files_flow.rs`](src-tauri/tests/entries_files_flow.rs.md) | Entries and files across instances, at rest.         |
+| [`tests/backup_flow.rs`](src-tauri/tests/backup_flow.rs.md)               | Restore elsewhere; damaged backups refused.          |
+| [`tests/security.rs`](src-tauri/tests/security.rs.md)                     | No leaks in errors, input checks, clipboard on lock. |
+
 ## Tooling
 
 | File                                      | Description                    |
