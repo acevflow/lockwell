@@ -22,5 +22,8 @@ and this project adheres to
 - Initial project structure: Tauri 2 desktop app skeleton with a React and
   TypeScript interface, Vitest and Testing Library, ESLint, Prettier, rustfmt
   and clippy.
+- Cryptographic core: Argon2id key derivation, XChaCha20-Poly1305 record
+  encryption and chunked STREAM encryption for large data, built on the
+  RustCrypto crates and tested with published test vectors and failure cases.
 
 [Unreleased]: https://github.com/acevflow/lockwell/commits/main
