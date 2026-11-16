@@ -30,7 +30,15 @@ function EntryForm({
   onSubmit,
   onCancel,
 }: EntryFormProps) {
-  const [entry, setEntry] = useState<EntryInput>(initial);
+  // Keep only the editable fields: `initial` may be a full `Entry`, and the
+  // core rejects unknown fields such as `id` or `createdAt`.
+  const [entry, setEntry] = useState<EntryInput>(() => ({
+    title: initial.title,
+    username: initial.username,
+    password: initial.password,
+    url: initial.url,
+    notes: initial.notes,
+  }));
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
