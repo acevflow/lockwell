@@ -43,6 +43,7 @@ how it fits in the project.
 | [`screens/UnlockScreen.tsx`](src/screens/UnlockScreen.tsx.md)           | Unlock with the master password.               |
 | [`screens/UnlockScreen.test.tsx`](src/screens/UnlockScreen.test.tsx.md) | Tests for the unlock screen.                   |
 | [`screens/VaultScreen.tsx`](src/screens/VaultScreen.tsx.md)             | Unlocked vault: tabs and Lock button.          |
+| [`screens/VaultScreen.test.tsx`](src/screens/VaultScreen.test.tsx.md)   | Tests for the unlocked vault screen.           |
 | [`screens/PasswordsTab.tsx`](src/screens/PasswordsTab.tsx.md)           | Password entries.                              |
 | [`screens/PasswordsTab.test.tsx`](src/screens/PasswordsTab.test.tsx.md) | Tests for the password entries section.        |
 | [`screens/FilesTab.tsx`](src/screens/FilesTab.tsx.md)                   | Encrypted files.                               |
