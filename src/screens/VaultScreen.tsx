@@ -1,12 +1,18 @@
 import { useState } from "react";
+import type { LockReason } from "../api/security";
+import { useActivityReporter } from "../hooks/useActivityReporter";
+import { useVaultLockedEvent } from "../hooks/useVaultLockedEvent";
 import PasswordsTab from "./PasswordsTab";
 import SettingsTab from "./SettingsTab";
 
 interface VaultScreenProps {
   /** Locks the vault (the Lock button). */
   onLock: () => void;
-  /** Called when the core reports that the vault is already locked. */
-  onLocked: () => void;
+  /**
+   * Called when the core locked the vault on its own (with the reason) or a
+   * command reports that it is locked (without one).
+   */
+  onLocked: (reason?: LockReason) => void;
 }
 
 const TABS = [
@@ -23,6 +29,8 @@ type TabId = (typeof TABS)[number]["id"];
  */
 function VaultScreen({ onLock, onLocked }: VaultScreenProps) {
   const [tab, setTab] = useState<TabId>("passwords");
+  useActivityReporter();
+  useVaultLockedEvent(onLocked);
 
   return (
     <div className="vault">

@@ -3,6 +3,7 @@
 pub mod commands;
 pub mod crypto;
 pub mod error;
+pub mod security;
 pub mod state;
 pub mod storage;
 pub mod vault;
@@ -22,6 +23,11 @@ pub fn run() {
         .setup(|app| {
             let vault_dir = app.path().app_data_dir()?.join(VAULT_DIR);
             app.manage(AppState::new(Vault::new(vault_dir)));
+            security::spawn_idle_watcher(app.handle().clone())?;
+            // The lock on Windows session lock is a security requirement:
+            // refuse to start without it rather than run unprotected.
+            #[cfg(windows)]
+            security::watch_system_lock(app.handle().clone())?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -35,6 +41,8 @@ pub fn run() {
             commands::entries::create_entry,
             commands::entries::update_entry,
             commands::entries::delete_entry,
+            commands::security::touch_activity,
+            commands::security::copy_entry_field,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

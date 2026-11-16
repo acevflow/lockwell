@@ -1,7 +1,14 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { listen } from "@tauri-apps/api/event";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import App from "./App";
-import { callsTo, failWith, mockCommands } from "./test/tauriMock";
+import { callsTo, emitEvent, failWith, mockCommands } from "./test/tauriMock";
 
 const noEntries = { list_entries: () => [] };
 
@@ -60,6 +67,48 @@ describe("App", () => {
     render(<App />);
     fireEvent.click(await screen.findByRole("button", { name: "Lock" }));
     expect(await screen.findByText("Your vault is locked.")).toBeVisible();
+  });
+
+  it("locks when the core emits the lock event and says why", async () => {
+    mockCommands({
+      vault_status: () => ({ exists: true, unlocked: true }),
+      ...noEntries,
+    });
+    render(<App />);
+    await screen.findByRole("tab", { name: "Passwords" });
+    await waitFor(() => expect(vi.mocked(listen)).toHaveBeenCalled());
+    act(() => emitEvent("vault-locked", { reason: "idle" }));
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "locked after 5 minutes of inactivity",
+    );
+  });
+
+  it("explains a lock caused by Windows", async () => {
+    mockCommands({
+      vault_status: () => ({ exists: true, unlocked: true }),
+      ...noEntries,
+    });
+    render(<App />);
+    await screen.findByRole("tab", { name: "Passwords" });
+    await waitFor(() => expect(vi.mocked(listen)).toHaveBeenCalled());
+    act(() => emitEvent("vault-locked", { reason: "systemLock" }));
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "because Windows was locked",
+    );
+  });
+
+  it("reports activity to the core at most once per interval", async () => {
+    mockCommands({
+      vault_status: () => ({ exists: true, unlocked: true }),
+      touch_activity: () => null,
+      ...noEntries,
+    });
+    render(<App />);
+    await screen.findByRole("tab", { name: "Passwords" });
+    fireEvent.keyDown(window, { key: "a" });
+    fireEvent.mouseMove(window);
+    fireEvent.keyDown(window, { key: "b" });
+    expect(callsTo("touch_activity")).toHaveLength(1);
   });
 
   it("goes to the unlock screen when the core reports a locked vault", async () => {

@@ -1,22 +1,57 @@
 import { useState } from "react";
+import { CLIPBOARD_CLEAR_SECONDS, type CopyableField } from "../api/security";
 import type { Entry } from "../api/types";
 
 interface EntryViewProps {
   entry: Entry;
   onEdit: () => void;
   onDelete: () => void;
+  /** Copies a field to the clipboard; a rejected promise is reported by the caller. */
+  onCopy: (field: CopyableField) => Promise<void>;
 }
 
+const FIELD_NAMES: Record<CopyableField, string> = {
+  username: "Username",
+  password: "Password",
+};
+
 /** Read-only view of an entry. The password stays masked until shown. */
-function EntryView({ entry, onEdit, onDelete }: EntryViewProps) {
+function EntryView({ entry, onEdit, onDelete, onCopy }: EntryViewProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const [copied, setCopied] = useState<CopyableField | null>(null);
+
+  async function copy(field: CopyableField) {
+    setCopied(null);
+    try {
+      await onCopy(field);
+      setCopied(field);
+    } catch {
+      // The caller has already shown the error.
+    }
+  }
 
   return (
     <section className="panel" aria-labelledby="entry-view-title">
       <h2 id="entry-view-title">{entry.title}</h2>
       <dl className="details">
         <dt>Username</dt>
-        <dd>{entry.username || <span className="muted">None</span>}</dd>
+        <dd>
+          {entry.username ? (
+            <span className="secret-row">
+              <span>{entry.username}</span>
+              <button
+                type="button"
+                className="secondary small"
+                onClick={() => void copy("username")}
+                aria-label="Copy username"
+              >
+                Copy
+              </button>
+            </span>
+          ) : (
+            <span className="muted">None</span>
+          )}
+        </dd>
 
         <dt>Password</dt>
         <dd>
@@ -32,6 +67,14 @@ function EntryView({ entry, onEdit, onDelete }: EntryViewProps) {
                 aria-pressed={showPassword}
               >
                 {showPassword ? "Hide" : "Show"}
+              </button>
+              <button
+                type="button"
+                className="secondary small"
+                onClick={() => void copy("password")}
+                aria-label="Copy password"
+              >
+                Copy
               </button>
             </span>
           ) : (
@@ -50,6 +93,12 @@ function EntryView({ entry, onEdit, onDelete }: EntryViewProps) {
         <dt>Last changed</dt>
         <dd>{new Date(entry.updatedAt).toLocaleString()}</dd>
       </dl>
+      {copied && (
+        <p className="success" role="status">
+          {FIELD_NAMES[copied]} copied. It will be cleared from the clipboard in{" "}
+          {CLIPBOARD_CLEAR_SECONDS} seconds.
+        </p>
+      )}
       <div className="actions">
         <button type="button" className="danger" onClick={onDelete}>
           Delete

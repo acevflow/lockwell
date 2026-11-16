@@ -7,10 +7,12 @@ import PasswordInput from "../components/PasswordInput";
 interface UnlockScreenProps {
   /** Called once the vault is unlocked. */
   onUnlocked: () => void;
+  /** Why the vault was locked automatically, if it was. */
+  notice?: string;
 }
 
 /** Asks for the master password to unlock the vault. */
-function UnlockScreen({ onUnlocked }: UnlockScreenProps) {
+function UnlockScreen({ onUnlocked, notice }: UnlockScreenProps) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -43,6 +45,11 @@ function UnlockScreen({ onUnlocked }: UnlockScreenProps) {
       <form className="card" onSubmit={submit} noValidate>
         <h1>lockwell</h1>
         <p>Your vault is locked.</p>
+        {notice && (
+          <p className="notice" role="status">
+            {notice}
+          </p>
+        )}
         <ErrorBanner message={error} />
         <PasswordInput
           id="master-password"

@@ -36,5 +36,11 @@ and this project adheres to
   view an entry with the password masked until shown, create, edit and delete
   entries, change the master password and lock the vault. Light and dark
   themes follow the system.
+- Automatic lock after 5 minutes of inactivity and when Windows is locked;
+  locking wipes the vault key from memory and the interface drops all
+  decrypted data and explains why it locked.
+- Copy a username or password to the clipboard straight from the core; it is
+  cleared after 30 seconds (or when the vault locks) if still there, and on
+  Windows it is kept out of the clipboard history and cloud sync.
 
 [Unreleased]: https://github.com/acevflow/lockwell/commits/main

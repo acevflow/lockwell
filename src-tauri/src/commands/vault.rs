@@ -35,13 +35,11 @@ pub async fn unlock_vault(state: State<'_, AppState>, password: String) -> AppRe
         .await
 }
 
-/// Locks the vault and wipes its key from memory.
+/// Locks the vault, wipes its key from memory and clears a secret this app
+/// left on the clipboard.
 #[tauri::command]
-pub fn lock_vault(state: State<'_, AppState>) -> AppResult<()> {
-    state.with_vault(|vault| {
-        vault.lock();
-        Ok(())
-    })
+pub fn lock_vault(state: State<'_, AppState>) {
+    state.lock();
 }
 
 /// Replaces the master password after checking the current one.
