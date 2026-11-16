@@ -12,43 +12,46 @@ without trusting a third-party service. The first target platform is Windows;
 macOS and Linux will follow.
 
 > [!WARNING]
-> lockwell is in early development and has **not been audited**. It is not
-> ready to protect real data yet.
+> lockwell 0.1 is a beta that has **not been audited**. Do not rely on it as
+> the only place where you keep important passwords or files.
 
 ## Features
-
-The following features are planned for the first beta (v0.1):
 
 - **100% local.** No network connections, no accounts, no telemetry.
 - **Strong, standard cryptography.** Vault data is encrypted with
   XChaCha20-Poly1305, and the encryption key is derived from the master
   password with Argon2id. Only standard, audited libraries are used.
-- **Encrypted password storage.** Entries are stored in a local SQLite
-  database where every record is encrypted individually.
+- **Encrypted password storage.** Entries (title, username, password, website
+  and notes) are stored in a local SQLite database where every record is
+  encrypted individually. Search the list, and reveal or copy a password only
+  when you need it.
 - **Encrypted files.** Files are stored as encrypted chunks inside the vault
   folder, and their file names are encrypted too.
-- **Encrypted backups** of the vault.
+- **Encrypted backups** of the whole vault in a single file, which can be
+  restored over the current vault or on a new computer.
 - **Automatic locking** after 5 minutes of inactivity and whenever Windows is
   locked. Secrets are wiped from memory when the vault locks.
 - **Clipboard protection.** Copied passwords are cleared from the clipboard
-  after 30 seconds.
+  after 30 seconds and, on Windows, kept out of the clipboard history and
+  cloud sync.
 - **Master password** of at least 12 characters, which can be changed. There is
   no recovery mechanism: if you forget it, your data cannot be recovered.
 
 ## Project status
 
-lockwell is currently in **Phase 1: Foundations** (repository structure,
-application skeleton, continuous integration and base documentation). There is
-no release yet.
+lockwell **0.1.0** is the first beta. It has not been audited.
 
-| Phase | Scope                                                 | Status      |
-| ----- | ----------------------------------------------------- | ----------- |
-| 1     | Foundations: repository, skeleton, CI, docs           | In progress |
-| 2     | Cryptographic core                                    | Planned     |
-| 3     | Vault and passwords, including master password change | Planned     |
-| 4     | Files                                                 | Planned     |
-| 5     | Encrypted backup                                      | Planned     |
-| 6     | Polish and v0.1 beta (not audited)                    | Planned     |
+| Phase | Scope                                                 | Status |
+| ----- | ----------------------------------------------------- | ------ |
+| 1     | Foundations: repository, skeleton, CI, docs           | Done   |
+| 2     | Cryptographic core                                    | Done   |
+| 3     | Vault and passwords, including master password change | Done   |
+| 4     | Files                                                 | Done   |
+| 5     | Encrypted backup                                      | Done   |
+| 6     | Polish and v0.1 beta (not audited)                    | Done   |
+
+Your vault is stored in `%APPDATA%\com.acevflow.lockwell\vault`. Keep encrypted
+backups somewhere else, such as an external drive.
 
 See the [changelog](CHANGELOG.md) for what has changed so far.
 
@@ -116,7 +119,7 @@ lockwell/
 │   └── test/         # Test setup
 ├── docs/             # Project documentation
 │   └── files/        # One document per code file, with an index (README.md)
-├── .github/          # CI workflows and security configuration (planned)
+├── .github/          # CI workflows and security configuration
 ├── index.html        # Interface entry page
 ├── package.json      # npm scripts and dependencies
 ├── vite.config.ts    # Vite and Vitest configuration
