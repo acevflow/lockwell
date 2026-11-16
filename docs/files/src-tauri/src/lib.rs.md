@@ -8,4 +8,6 @@ the Tauri application:
   folder inside the app data folder
   (`%APPDATA%\com.acevflow.lockwell\vault` on Windows).
 - It registers the vault commands (`vault_status`, `create_vault`,
-  `unlock_vault`, `lock_vault`, `change_master_password`).
+  `unlock_vault`, `lock_vault`, `change_master_password`) and the entry
+  commands (`list_entries`, `get_entry`, `create_entry`, `update_entry`,
+  `delete_entry`).

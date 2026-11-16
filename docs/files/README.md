@@ -25,10 +25,11 @@ how it fits in the project.
 
 ### Commands (`src-tauri/src/commands/`)
 
-| File                                                      | Description                                   |
-| --------------------------------------------------------- | --------------------------------------------- |
-| [`commands/mod.rs`](src-tauri/src/commands/mod.rs.md)     | Module entry point.                           |
-| [`commands/vault.rs`](src-tauri/src/commands/vault.rs.md) | Create, unlock, lock, change master password. |
+| File                                                          | Description                                    |
+| ------------------------------------------------------------- | ---------------------------------------------- |
+| [`commands/mod.rs`](src-tauri/src/commands/mod.rs.md)         | Module entry point.                            |
+| [`commands/vault.rs`](src-tauri/src/commands/vault.rs.md)     | Create, unlock, lock, change master password.  |
+| [`commands/entries.rs`](src-tauri/src/commands/entries.rs.md) | List, read, create, update and delete entries. |
 
 ### Vault (`src-tauri/src/vault/`)
 
@@ -38,6 +39,7 @@ how it fits in the project.
 | [`vault/header.rs`](src-tauri/src/vault/header.rs.md)                   | Key header: Argon2id parameters, salt, wrapped key. |
 | [`vault/password_policy.rs`](src-tauri/src/vault/password_policy.rs.md) | Master password rules.                              |
 | [`vault/session.rs`](src-tauri/src/vault/session.rs.md)                 | `Vault`: create, unlock, lock, change password.     |
+| [`vault/entries.rs`](src-tauri/src/vault/entries.rs.md)                 | Encrypted password entries and their validation.    |
 
 ### Storage (`src-tauri/src/storage/`)
 

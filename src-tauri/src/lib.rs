@@ -30,6 +30,11 @@ pub fn run() {
             commands::vault::unlock_vault,
             commands::vault::lock_vault,
             commands::vault::change_master_password,
+            commands::entries::list_entries,
+            commands::entries::get_entry,
+            commands::entries::create_entry,
+            commands::entries::update_entry,
+            commands::entries::delete_entry,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
