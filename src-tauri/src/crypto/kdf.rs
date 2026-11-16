@@ -229,4 +229,75 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn accepts_the_inclusive_bounds() {
+        let cases = [
+            KdfParams {
+                parallelism: MAX_PARALLELISM,
+                memory_kib: 8 * MAX_PARALLELISM,
+                iterations: 1,
+            },
+            KdfParams {
+                iterations: MAX_ITERATIONS,
+                ..FAST
+            },
+            KdfParams {
+                memory_kib: 8,
+                parallelism: 1,
+                iterations: 1,
+            },
+            KdfParams {
+                memory_kib: MAX_MEMORY_KIB,
+                ..FAST
+            },
+        ];
+        for params in cases {
+            assert_eq!(params.validate(), Ok(()), "rejected {params:?}");
+        }
+    }
+
+    #[test]
+    fn derives_with_the_smallest_valid_memory_per_lane() {
+        let params = KdfParams {
+            memory_kib: 8 * 4,
+            iterations: 1,
+            parallelism: 4,
+        };
+        let key = derive_key(b"password", &[3u8; SALT_LEN], &params).unwrap();
+        assert_ne!(key.as_bytes(), &[0u8; 32]);
+    }
+
+    #[test]
+    fn reports_which_parameter_is_out_of_range() {
+        let cases = [
+            (
+                KdfParams {
+                    parallelism: 0,
+                    ..FAST
+                },
+                "parallelism out of range",
+            ),
+            (
+                KdfParams {
+                    iterations: 0,
+                    ..FAST
+                },
+                "iterations out of range",
+            ),
+            (
+                KdfParams {
+                    memory_kib: 0,
+                    ..FAST
+                },
+                "memory cost out of range",
+            ),
+        ];
+        for (params, problem) in cases {
+            assert_eq!(
+                params.validate(),
+                Err(CryptoError::InvalidKdfParams(problem))
+            );
+        }
+    }
 }

@@ -218,7 +218,7 @@ pub(crate) fn read_header(conn: &Connection) -> AppResult<VaultHeader> {
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
-    use crate::vault::header::tests::FAST_KDF;
+    use crate::vault::header::{self, tests::FAST_KDF};
 
     pub(crate) const PASSWORD: &str = "correct horse battery";
 
@@ -376,5 +376,112 @@ pub(crate) mod tests {
                 .unwrap_err(),
             AppError::Locked
         );
+    }
+
+    /// Runs `sql` against the database of a locked vault.
+    fn edit_database(vault: &Vault, sql: &str) {
+        let conn = Connection::open(vault.database_path()).unwrap();
+        conn.execute_batch(sql).unwrap();
+    }
+
+    /// Stored header with its format version replaced by `version`.
+    fn header_with_version(vault: &Vault, version: u32) -> Vec<u8> {
+        let mut bytes = db::get_meta(&vault.unlocked().unwrap().conn, HEADER_META_KEY)
+            .unwrap()
+            .unwrap();
+        bytes[4..8].copy_from_slice(&version.to_le_bytes());
+        bytes
+    }
+
+    #[test]
+    fn paths_are_inside_the_vault_folder() {
+        let dir = tempfile::tempdir().unwrap();
+        let vault = Vault::with_kdf(dir.path().join("vault"), FAST_KDF);
+        assert_eq!(vault.dir(), dir.path().join("vault"));
+        assert_eq!(
+            vault.database_path(),
+            dir.path().join("vault").join("vault.db")
+        );
+    }
+
+    #[test]
+    fn a_failed_unlock_of_an_unlocked_vault_locks_it() {
+        let (_dir, mut vault) = unlocked_vault();
+        assert_eq!(
+            vault.unlock("wrong password!!").unwrap_err(),
+            AppError::WrongPasswordOrCorrupt
+        );
+        assert!(!vault.is_unlocked());
+    }
+
+    #[test]
+    fn unlocking_an_unlocked_vault_keeps_it_unlocked() {
+        let (_dir, mut vault) = unlocked_vault();
+        vault.unlock(PASSWORD).unwrap();
+        assert!(vault.is_unlocked());
+    }
+
+    #[test]
+    fn unlock_rejects_a_newer_header_format() {
+        let (_dir, mut vault) = unlocked_vault();
+        let newer = header_with_version(&vault, header::FORMAT_VERSION + 1);
+        db::set_meta(&vault.unlocked().unwrap().conn, HEADER_META_KEY, &newer).unwrap();
+        vault.lock();
+        assert_eq!(
+            vault.unlock(PASSWORD).unwrap_err(),
+            AppError::UnsupportedVersion
+        );
+        assert!(!vault.is_unlocked());
+    }
+
+    #[test]
+    fn unlock_rejects_a_newer_database_schema() {
+        let (_dir, mut vault) = unlocked_vault();
+        vault.lock();
+        edit_database(
+            &vault,
+            &format!("PRAGMA user_version = {};", db::SCHEMA_VERSION + 1),
+        );
+        assert_eq!(
+            vault.unlock(PASSWORD).unwrap_err(),
+            AppError::UnsupportedVersion
+        );
+    }
+
+    #[test]
+    fn change_master_password_detects_a_missing_header() {
+        let (_dir, mut vault) = unlocked_vault();
+        vault
+            .unlocked()
+            .unwrap()
+            .conn
+            .execute("DELETE FROM meta", [])
+            .unwrap();
+        assert!(matches!(
+            vault.change_master_password(PASSWORD, "a brand new password"),
+            Err(AppError::Corrupt(_))
+        ));
+    }
+
+    #[test]
+    fn change_master_password_refuses_a_header_of_another_key() {
+        // A header swapped in from another vault opens with the same password
+        // but wraps a different key: it must not be rewrapped.
+        let (_dir, mut vault) = unlocked_vault();
+        let (_other_dir, other) = unlocked_vault();
+        let foreign = db::get_meta(&other.unlocked().unwrap().conn, HEADER_META_KEY)
+            .unwrap()
+            .unwrap();
+        db::set_meta(&vault.unlocked().unwrap().conn, HEADER_META_KEY, &foreign).unwrap();
+        assert_eq!(
+            vault
+                .change_master_password(PASSWORD, "a brand new password")
+                .unwrap_err(),
+            AppError::WrongPasswordOrCorrupt
+        );
+        let stored = db::get_meta(&vault.unlocked().unwrap().conn, HEADER_META_KEY)
+            .unwrap()
+            .unwrap();
+        assert_eq!(stored, foreign);
     }
 }

@@ -480,4 +480,111 @@ mod tests {
         let parsed: EntryInput = serde_json::from_str(r#"{"title":"x"}"#).unwrap();
         assert_eq!(parsed.password, "");
     }
+
+    /// An input where every field is exactly at its limit, counted in
+    /// characters that take several bytes each.
+    fn input_at_the_limits() -> EntryInput {
+        EntryInput {
+            title: "é".repeat(MAX_TITLE_CHARS),
+            username: "é".repeat(MAX_USERNAME_CHARS),
+            password: "é".repeat(MAX_PASSWORD_CHARS),
+            url: "é".repeat(MAX_URL_CHARS),
+            notes: "é".repeat(MAX_NOTES_CHARS),
+        }
+    }
+
+    #[test]
+    fn accepts_every_field_at_its_limit() {
+        let (_dir, vault) = unlocked_vault();
+        let unlocked = vault.unlocked().unwrap();
+        let id = unlocked.create_entry(&input_at_the_limits()).unwrap();
+        assert_eq!(
+            unlocked.get_entry(&id).unwrap().notes.chars().count(),
+            MAX_NOTES_CHARS
+        );
+    }
+
+    /// Makes one field of an entry one character longer.
+    type Lengthen = fn(&mut EntryInput);
+
+    #[test]
+    fn names_the_field_that_is_too_long() {
+        let cases: [(Lengthen, &str); 5] = [
+            (
+                |e| e.title.push('x'),
+                "the title must have at most 200 characters",
+            ),
+            (
+                |e| e.username.push('x'),
+                "the username must have at most 500 characters",
+            ),
+            (
+                |e| e.password.push('x'),
+                "the password must have at most 4096 characters",
+            ),
+            (
+                |e| e.url.push('x'),
+                "the URL must have at most 2048 characters",
+            ),
+            (
+                |e| e.notes.push('x'),
+                "the notes must have at most 20000 characters",
+            ),
+        ];
+        for (lengthen, message) in cases {
+            let mut entry = input_at_the_limits();
+            lengthen(&mut entry);
+            assert_eq!(validate_entry(&entry), Err(AppError::invalid(message)));
+        }
+    }
+
+    #[test]
+    fn invalid_updates_leave_the_entry_unchanged() {
+        let (_dir, vault) = unlocked_vault();
+        let unlocked = vault.unlocked().unwrap();
+        let id = unlocked.create_entry(&input("Original")).unwrap();
+        assert_eq!(
+            unlocked.update_entry(&id, &input(" ")).unwrap_err(),
+            AppError::invalid("the title is required")
+        );
+        assert_eq!(unlocked.get_entry(&id).unwrap().title, "Original");
+    }
+
+    #[test]
+    fn deleting_twice_is_not_found() {
+        let (_dir, vault) = unlocked_vault();
+        let unlocked = vault.unlocked().unwrap();
+        let id = unlocked.create_entry(&input("Once")).unwrap();
+        unlocked.delete_entry(&id).unwrap();
+        assert_eq!(
+            unlocked.delete_entry(&id).unwrap_err(),
+            AppError::NotFound("entry")
+        );
+    }
+
+    #[test]
+    fn authentic_rows_with_an_invalid_format_are_corrupt() {
+        // The row decrypts with the right key and context, but is not an entry.
+        let (_dir, vault) = unlocked_vault();
+        let unlocked = vault.unlocked().unwrap();
+        let id = unlocked.create_entry(&input("Replaced")).unwrap();
+        let sealed = aead::seal(&unlocked.key, b"not json", &entry_aad(&id)).unwrap();
+        db::update_record(&unlocked.conn, Table::Entries, &id, &sealed).unwrap();
+
+        let expected = AppError::Corrupt("an entry has an invalid format".into());
+        assert_eq!(unlocked.get_entry(&id).unwrap_err(), expected);
+        assert_eq!(unlocked.list_entries().unwrap_err(), expected);
+    }
+
+    #[test]
+    #[ignore = "FINDING: Entry and EntryInput derive Debug, which prints the password \
+                and notes in plain text (SecretKey redacts its Debug output)"]
+    fn debug_output_hides_secrets() {
+        let mut entry = input("Mail");
+        entry.password = "synthetic-secret-value".into();
+        entry.notes = "synthetic-secret-notes".into();
+        let printed = format!("{entry:?}");
+        assert!(!printed.contains("synthetic-secret-value"));
+        assert!(!printed.contains("synthetic-secret-notes"));
+    }
 }

@@ -11,4 +11,5 @@ Derives a 256-bit key from the master password with Argon2id v1.3.
 
 Tests check the Argon2id reference test vector (phc-winner-argon2), that
 password, salt and parameters all change the key, and that out-of-range
-parameters and short salts are rejected.
+parameters and short salts are rejected while the inclusive bounds are
+accepted.

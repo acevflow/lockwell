@@ -691,4 +691,196 @@ mod tests {
         body.push(KIND_END);
         assert!(parse(body).is_ok());
     }
+
+    /// One container record, as written by `add_record`.
+    fn record_bytes(kind: u8, name: &[u8], data: &[u8]) -> Vec<u8> {
+        let mut bytes = vec![kind];
+        bytes.extend_from_slice(&(name.len() as u16).to_le_bytes());
+        bytes.extend_from_slice(name);
+        bytes.extend_from_slice(&(data.len() as u64).to_le_bytes());
+        bytes.extend_from_slice(data);
+        bytes
+    }
+
+    /// Unpacks `contents` into a fresh staging folder.
+    fn unpack(contents: Vec<u8>) -> AppResult<()> {
+        let dir = tempfile::tempdir().unwrap();
+        fs::create_dir_all(dir.path().join(FILES_DIR)).unwrap();
+        unpack_contents(&mut Cursor::new(contents), dir.path())
+    }
+
+    fn container(records: &[Vec<u8>]) -> Vec<u8> {
+        let mut bytes = CONTAINER_MAGIC.to_vec();
+        for record in records {
+            bytes.extend_from_slice(record);
+        }
+        bytes
+    }
+
+    #[test]
+    fn container_parser_names_each_problem() {
+        let database = record_bytes(KIND_DATABASE, DATABASE_FILE.as_bytes(), b"db");
+        let blob_name = format!("{}.{BLOB_EXTENSION}", "b".repeat(32));
+        let blob = record_bytes(KIND_BLOB, blob_name.as_bytes(), b"x");
+        let end = vec![KIND_END];
+
+        let cases = [
+            (b"NOPE".to_vec(), "unknown backup contents"),
+            (CONTAINER_MAGIC[..2].to_vec(), "the backup is truncated"),
+            (
+                container(std::slice::from_ref(&database)),
+                "the backup is truncated",
+            ),
+            (
+                container(&[database.clone(), end.clone(), b"x".to_vec()]),
+                "unexpected data after the end",
+            ),
+            (
+                container(&[record_bytes(KIND_DATABASE, &[0xFF, 0xFE], b""), end.clone()]),
+                "invalid name",
+            ),
+            (
+                container(&[database.clone(), blob.clone(), blob, end.clone()]),
+                "unexpected record",
+            ),
+            (container(&[end]), "the database is missing"),
+        ];
+        for (contents, detail) in cases {
+            assert_eq!(unpack(contents), Err(corrupt(detail)), "{detail}");
+        }
+    }
+
+    /// A copy of the vault folder, made while the vault is locked, together
+    /// with the vault key and header.
+    fn staged_copy(vault: &mut Vault) -> (tempfile::TempDir, SecretKey, VaultHeader) {
+        vault.lock();
+        let staging = tempfile::tempdir().unwrap();
+        fs::create_dir_all(staging.path().join(FILES_DIR)).unwrap();
+        fs::copy(vault.database_path(), staging.path().join(DATABASE_FILE)).unwrap();
+        for blob in fs::read_dir(vault.dir().join(FILES_DIR)).unwrap() {
+            let blob = blob.unwrap();
+            fs::copy(
+                blob.path(),
+                staging.path().join(FILES_DIR).join(blob.file_name()),
+            )
+            .unwrap();
+        }
+        vault.unlock(PASSWORD).unwrap();
+        let unlocked = vault.unlocked().unwrap();
+        (
+            staging,
+            unlocked.key.clone(),
+            read_header(&unlocked.conn).unwrap(),
+        )
+    }
+
+    fn only_blob(staging: &Path) -> PathBuf {
+        let mut blobs = fs::read_dir(staging.join(FILES_DIR)).unwrap();
+        let blob = blobs.next().unwrap().unwrap().path();
+        assert!(blobs.next().is_none());
+        blob
+    }
+
+    #[test]
+    fn staged_vault_check_accepts_an_intact_copy() {
+        let (_vault_dir, mut vault, _outside, _backup) = vault_with_backup();
+        let (staging, key, header) = staged_copy(&mut vault);
+        assert_eq!(check_staged_vault(staging.path(), &header, &key), Ok(()));
+    }
+
+    #[test]
+    fn staged_vault_check_refuses_a_header_that_does_not_match() {
+        let (_vault_dir, mut vault, _outside, _backup) = vault_with_backup();
+        let (staging, key, _header) = staged_copy(&mut vault);
+        let other = VaultHeader::wrap(&key, b"another password", FAST_KDF).unwrap();
+        assert_eq!(
+            check_staged_vault(staging.path(), &other, &key),
+            Err(corrupt("the backup header does not match its database"))
+        );
+    }
+
+    #[test]
+    fn staged_vault_check_refuses_missing_or_foreign_blobs() {
+        let (_vault_dir, mut vault, _outside, _backup) = vault_with_backup();
+        let (staging, key, header) = staged_copy(&mut vault);
+        let blob = only_blob(staging.path());
+
+        fs::write(&blob, b"XXXXnot a blob").unwrap();
+        assert_eq!(
+            check_staged_vault(staging.path(), &header, &key),
+            Err(corrupt("a file in the backup has an unknown format"))
+        );
+        fs::remove_file(&blob).unwrap();
+        assert_eq!(
+            check_staged_vault(staging.path(), &header, &key),
+            Err(corrupt("a file is missing from the backup"))
+        );
+    }
+
+    #[test]
+    fn staged_vault_check_refuses_rows_of_another_key() {
+        let (_vault_dir, mut vault, _outside, _backup) = vault_with_backup();
+        let (staging, _key, header) = staged_copy(&mut vault);
+        let other_key = SecretKey::from_slice(&[7u8; 32]).unwrap();
+        assert!(matches!(
+            check_staged_vault(staging.path(), &header, &other_key),
+            Err(AppError::Corrupt(_))
+        ));
+    }
+
+    #[test]
+    fn restore_needs_an_existing_file() {
+        let (_vault_dir, mut vault, outside, _backup) = vault_with_backup();
+        assert_eq!(
+            vault.restore_backup(outside.path(), PASSWORD).unwrap_err(),
+            AppError::invalid("the backup must be a file")
+        );
+        assert_eq!(
+            vault
+                .restore_backup(&outside.path().join("missing.lwbackup"), PASSWORD)
+                .unwrap_err()
+                .code(),
+            "io"
+        );
+        assert!(vault.is_unlocked());
+        assert_eq!(siblings(&vault), ["vault"]);
+    }
+
+    #[test]
+    fn restore_needs_a_vault_folder_with_a_parent() {
+        let (_vault_dir, _vault, _outside, backup) = vault_with_backup();
+        // A bare relative name has no parent folder to stage the restore in.
+        let mut vault = Vault::with_kdf("lockwell-test-vault-without-parent", FAST_KDF);
+        assert_eq!(
+            vault.restore_backup(&backup, PASSWORD).unwrap_err(),
+            AppError::invalid("the vault folder has no parent folder")
+        );
+        assert!(!vault.exists());
+    }
+
+    #[test]
+    fn concat_reads_its_parts_in_order() {
+        let parts: Vec<Box<dyn Read + Send>> = vec![
+            Box::new(Cursor::new(b"ab".to_vec())),
+            Box::new(Cursor::new(Vec::new())),
+            Box::new(Cursor::new(b"cde".to_vec())),
+        ];
+        let mut concat = Concat {
+            parts: parts.into(),
+        };
+        assert_eq!(concat.read(&mut []).unwrap(), 0);
+        let mut joined = Vec::new();
+        concat.read_to_end(&mut joined).unwrap();
+        assert_eq!(joined, b"abcde");
+        assert_eq!(concat.read(&mut [0u8; 4]).unwrap(), 0);
+    }
+
+    #[test]
+    fn blob_names_must_be_generated_ids() {
+        let id = "c".repeat(32);
+        assert!(is_blob_name(&format!("{id}.{BLOB_EXTENSION}")));
+        assert!(!is_blob_name(&id));
+        assert!(!is_blob_name(&format!("{id}.txt")));
+        assert!(!is_blob_name(&format!("../{id}.{BLOB_EXTENSION}")));
+    }
 }

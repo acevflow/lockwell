@@ -25,3 +25,8 @@ characters. Title, username and URL are trimmed; password and notes are kept
 exactly. Ids must have the shape of a generated id (`check_id()`).
 
 Entry values are wiped from memory when dropped.
+
+Tests cover the CRUD operations, every field at and over its limit, invalid
+ids and updates, encryption at rest, and swapped, tampered or malformed rows.
+An ignored test records that the `Debug` output of `Entry` and `EntryInput`
+includes the password and notes.

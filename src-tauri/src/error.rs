@@ -148,4 +148,63 @@ mod tests {
         assert_eq!(mapped.code(), "io");
         assert!(!mapped.to_string().contains("secret"));
     }
+
+    #[test]
+    fn every_variant_has_a_stable_code() {
+        let cases = [
+            (AppError::WrongPasswordOrCorrupt, "wrong_password"),
+            (AppError::Locked, "locked"),
+            (AppError::VaultExists, "vault_exists"),
+            (AppError::VaultNotFound, "vault_not_found"),
+            (AppError::invalid("x"), "invalid_input"),
+            (AppError::NotFound("entry"), "not_found"),
+            (AppError::Corrupt("x".into()), "corrupt"),
+            (AppError::UnsupportedVersion, "unsupported_version"),
+            (AppError::Crypto("x".into()), "crypto"),
+            (AppError::Storage("x".into()), "storage"),
+            (AppError::Io("x".into()), "io"),
+        ];
+        for (error, code) in cases {
+            assert_eq!(error.code(), code, "{error:?}");
+        }
+    }
+
+    #[test]
+    fn messages_name_the_missing_item_and_the_damage() {
+        assert_eq!(AppError::NotFound("entry").to_string(), "entry not found");
+        let json = serde_json::to_value(AppError::Corrupt("bad header".into())).unwrap();
+        assert_eq!(json["code"], "corrupt");
+        assert_eq!(json["message"], "the vault data is damaged: bad header");
+    }
+
+    #[test]
+    fn wrong_password_and_damage_share_one_message() {
+        let json = serde_json::to_value(AppError::WrongPasswordOrCorrupt).unwrap();
+        assert_eq!(
+            json["message"],
+            "the master password is incorrect or the vault is damaged"
+        );
+    }
+
+    #[test]
+    fn maps_non_authentication_crypto_errors_to_crypto() {
+        let errors = [
+            CryptoError::InvalidKdfParams("memory"),
+            CryptoError::KeyDerivation,
+            CryptoError::InvalidKeyLength,
+            CryptoError::Encryption,
+        ];
+        for error in errors {
+            let message = error.to_string();
+            assert_eq!(AppError::from(error), AppError::Crypto(message));
+        }
+    }
+
+    #[test]
+    fn maps_database_errors_to_storage() {
+        let error = rusqlite::Error::QueryReturnedNoRows;
+        let mapped = AppError::from(error);
+        assert_eq!(mapped.code(), "storage");
+        assert!(mapped.to_string().starts_with("storage error: "));
+    }
 }

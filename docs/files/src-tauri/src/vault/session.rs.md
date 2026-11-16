@@ -16,3 +16,7 @@ The `Vault`: the vault folder and its locked or unlocked state.
 
 The vault folder contains `vault.db` and `files/`. `UnlockedVault` keeps the
 vault folder, so file operations can find `files/`.
+
+Tests cover creation, locking and unlocking (a failed unlock always leaves the
+vault locked), newer header formats and schemas, missing or swapped headers,
+and changing the master password.

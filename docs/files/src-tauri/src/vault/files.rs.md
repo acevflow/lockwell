@@ -32,5 +32,7 @@ writes go through a temporary file that is renamed when complete
 
 Tests cover empty, small, chunk-sized and large files, that names and content
 are not visible on disk, Unicode names, sorting, overwrite protection,
-damaged, swapped, foreign and missing blobs, deletion, invalid sources and
-destinations, malformed ids, name rules and a master password change.
+damaged, truncated, swapped, foreign and missing blobs, tampered or malformed
+descriptions, deletion (also when the blob is gone), invalid sources (bad or
+non-Unicode names) and destinations (folders, missing folders, the vault),
+malformed ids, name rules, atomic writes and a master password change.

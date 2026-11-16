@@ -387,4 +387,99 @@ mod tests {
         assert_eq!(encrypted_len(chunk), prefix + chunk + tag);
         assert_eq!(encrypted_len(chunk + 1), prefix + chunk + 1 + 2 * tag);
     }
+
+    /// Reader that hands out at most `step` bytes per call and is interrupted
+    /// before every successful read, like a slow pipe receiving signals.
+    struct Trickle<'a> {
+        data: &'a [u8],
+        step: usize,
+        interrupt_next: bool,
+    }
+
+    impl<'a> Trickle<'a> {
+        fn new(data: &'a [u8], step: usize) -> Self {
+            Trickle {
+                data,
+                step,
+                interrupt_next: true,
+            }
+        }
+    }
+
+    impl Read for Trickle<'_> {
+        fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+            if self.interrupt_next && !self.data.is_empty() {
+                self.interrupt_next = false;
+                return Err(std::io::ErrorKind::Interrupted.into());
+            }
+            self.interrupt_next = true;
+            let len = self.step.min(buffer.len()).min(self.data.len());
+            buffer[..len].copy_from_slice(&self.data[..len]);
+            self.data = &self.data[len..];
+            Ok(len)
+        }
+    }
+
+    /// Writer that accepts `capacity` bytes and then fails.
+    struct FullDisk {
+        capacity: usize,
+    }
+
+    impl Write for FullDisk {
+        fn write(&mut self, buffer: &[u8]) -> std::io::Result<usize> {
+            if self.capacity == 0 {
+                return Err(std::io::ErrorKind::StorageFull.into());
+            }
+            let len = buffer.len().min(self.capacity);
+            self.capacity -= len;
+            Ok(len)
+        }
+
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn short_and_interrupted_reads_are_retried() {
+        let plaintext = data(2 * CHUNK_LEN + 5);
+        let mut sealed = Vec::new();
+        let written = encrypt(
+            &key(),
+            b"aad",
+            &mut Trickle::new(&plaintext, 7000),
+            &mut sealed,
+        )
+        .unwrap();
+        assert_eq!(written, plaintext.len() as u64);
+
+        let mut opened = Vec::new();
+        let read = decrypt(
+            &key(),
+            b"aad",
+            &mut Trickle::new(&sealed, 9000),
+            &mut opened,
+        )
+        .unwrap();
+        assert_eq!(read, plaintext.len() as u64);
+        assert_eq!(opened, plaintext);
+    }
+
+    #[test]
+    fn write_errors_are_reported() {
+        let plaintext = data(CHUNK_LEN + 1);
+        let sealed = encrypt_vec(&plaintext, b"");
+
+        let expected = || CryptoError::from(std::io::Error::from(std::io::ErrorKind::StorageFull));
+
+        // Fails on the prefix or a middle chunk, then on a chunk or the last one.
+        for capacity in [0, NONCE_PREFIX_LEN + 10] {
+            let result = encrypt(&key(), b"", &mut &plaintext[..], &mut FullDisk { capacity });
+            assert_eq!(result, Err(expected()), "capacity {capacity}");
+        }
+        for capacity in [10, CHUNK_LEN] {
+            let result = decrypt(&key(), b"", &mut &sealed[..], &mut FullDisk { capacity });
+            assert_eq!(result, Err(expected()), "capacity {capacity}");
+        }
+    }
 }

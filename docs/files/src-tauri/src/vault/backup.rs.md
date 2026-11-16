@@ -34,4 +34,7 @@ data after the end.
 Tests cover restoring over an existing vault and on a new computer, the
 password at backup time, wrong passwords, truncated, tampered, extended and
 foreign files, newer versions, paths inside the vault, that the content is
-encrypted, a missing blob and the container parser.
+encrypted, a missing blob, folders and missing paths as backups, a vault folder
+without a parent, every error of the container parser, every check of the
+staged vault (header, rows, missing or foreign blobs) and the reader that joins
+the container parts.

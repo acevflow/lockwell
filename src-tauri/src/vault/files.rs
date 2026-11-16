@@ -627,4 +627,150 @@ mod tests {
             .unwrap();
         assert_eq!(fs::read(destination).unwrap(), b"kept");
     }
+
+    #[test]
+    fn export_refuses_a_folder_even_when_overwriting() {
+        let (_vault_dir, vault) = unlocked_vault();
+        let unlocked = vault.unlocked().unwrap();
+        let (src_dir, source) = source_file("a.txt", b"x");
+        let summary = unlocked.import_file(&source).unwrap();
+        assert_eq!(
+            unlocked
+                .export_file(&summary.id, src_dir.path(), true)
+                .unwrap_err(),
+            AppError::invalid("the destination is a folder")
+        );
+    }
+
+    #[test]
+    fn export_needs_an_existing_destination_folder() {
+        let (_vault_dir, vault) = unlocked_vault();
+        let unlocked = vault.unlocked().unwrap();
+        let (src_dir, source) = source_file("a.txt", b"x");
+        let summary = unlocked.import_file(&source).unwrap();
+        let destination = src_dir.path().join("missing").join("out.txt");
+        assert_eq!(
+            unlocked
+                .export_file(&summary.id, &destination, false)
+                .unwrap_err(),
+            AppError::invalid("the destination folder does not exist")
+        );
+    }
+
+    #[test]
+    fn a_truncated_blob_is_corrupt() {
+        let (_vault_dir, vault) = unlocked_vault();
+        let unlocked = vault.unlocked().unwrap();
+        let (src_dir, source) = source_file("a.txt", b"x");
+        let summary = unlocked.import_file(&source).unwrap();
+        fs::write(unlocked.blob_path(&summary.id), b"LW").unwrap();
+        let destination = src_dir.path().join("out.txt");
+        assert_eq!(
+            unlocked
+                .export_file(&summary.id, &destination, false)
+                .unwrap_err(),
+            AppError::Corrupt("the encrypted file is truncated".into())
+        );
+        assert!(!destination.exists());
+    }
+
+    #[test]
+    fn delete_succeeds_when_the_blob_is_already_gone() {
+        let (_vault_dir, vault) = unlocked_vault();
+        let unlocked = vault.unlocked().unwrap();
+        let (_src, source) = source_file("a.txt", b"x");
+        let summary = unlocked.import_file(&source).unwrap();
+        fs::remove_file(unlocked.blob_path(&summary.id)).unwrap();
+        unlocked.delete_file(&summary.id).unwrap();
+        assert!(unlocked.list_files().unwrap().is_empty());
+    }
+
+    #[test]
+    fn rejects_source_names_that_break_the_rules() {
+        let (_vault_dir, vault) = unlocked_vault();
+        let unlocked = vault.unlocked().unwrap();
+        let folder = tempfile::tempdir().unwrap();
+        // Checked before the file is opened, so these paths need not exist.
+        assert_eq!(
+            unlocked
+                .import_file(&folder.path().join("bell\u{7}.txt"))
+                .unwrap_err(),
+            AppError::invalid("the file name contains invalid characters")
+        );
+        assert_eq!(
+            unlocked.import_file(&folder.path().join("..")).unwrap_err(),
+            AppError::invalid("the path has no file name")
+        );
+        assert!(unlocked.list_files().unwrap().is_empty());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn rejects_source_names_that_are_not_unicode() {
+        use std::ffi::OsString;
+        use std::os::windows::ffi::OsStringExt;
+
+        let (_vault_dir, vault) = unlocked_vault();
+        let unlocked = vault.unlocked().unwrap();
+        let folder = tempfile::tempdir().unwrap();
+        // A lone UTF-16 surrogate is a valid Windows name but not Unicode.
+        let name = OsString::from_wide(&[0x61, 0xD800, 0x62]);
+        assert_eq!(
+            unlocked.import_file(&folder.path().join(name)).unwrap_err(),
+            AppError::invalid("the file name is not valid Unicode")
+        );
+    }
+
+    #[test]
+    fn tampered_or_malformed_descriptions_are_corrupt() {
+        let (_vault_dir, vault) = unlocked_vault();
+        let unlocked = vault.unlocked().unwrap();
+        let (_src, source) = source_file("a.txt", b"x");
+        let id = unlocked.import_file(&source).unwrap().id;
+
+        let mut sealed = db::get_record(&unlocked.conn, Table::Files, &id).unwrap();
+        sealed[0] ^= 1;
+        db::update_record(&unlocked.conn, Table::Files, &id, &sealed).unwrap();
+        let tampered = AppError::Corrupt("a file description failed to decrypt".into());
+        assert_eq!(unlocked.get_file(&id).unwrap_err(), tampered);
+
+        let malformed = aead::seal(&unlocked.key, b"[]", &meta_aad(&id)).unwrap();
+        db::update_record(&unlocked.conn, Table::Files, &id, &malformed).unwrap();
+        let invalid = AppError::Corrupt("a file description has an invalid format".into());
+        assert_eq!(unlocked.get_file(&id).unwrap_err(), invalid);
+        assert_eq!(unlocked.list_files().unwrap_err(), invalid);
+    }
+
+    #[test]
+    fn atomic_writes_leave_nothing_behind_on_failure() {
+        let dir = tempfile::tempdir().unwrap();
+        let target = dir.path().join("target.txt");
+        fs::write(&target, b"original").unwrap();
+
+        let result: AppResult<()> = write_atomically(&target, |writer| {
+            writer.write_all(b"partial")?;
+            Err(AppError::Corrupt("stop".into()))
+        });
+
+        assert_eq!(result.unwrap_err(), AppError::Corrupt("stop".into()));
+        assert_eq!(fs::read(&target).unwrap(), b"original");
+        assert_eq!(fs::read_dir(dir.path()).unwrap().count(), 1);
+    }
+
+    #[test]
+    fn atomic_writes_replace_the_target_on_success() {
+        let dir = tempfile::tempdir().unwrap();
+        let target = dir.path().join("target.txt");
+        fs::write(&target, b"original").unwrap();
+
+        let value = write_atomically(&target, |writer| {
+            writer.write_all(b"replaced")?;
+            Ok(8)
+        })
+        .unwrap();
+
+        assert_eq!(value, 8);
+        assert_eq!(fs::read(&target).unwrap(), b"replaced");
+        assert_eq!(fs::read_dir(dir.path()).unwrap().count(), 1);
+    }
 }

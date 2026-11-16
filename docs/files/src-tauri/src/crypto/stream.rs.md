@@ -19,4 +19,4 @@ allocated with room for the tag so they never reallocate.
 
 Tests cover sizes around the chunk boundary (including empty input), wrong
 key and associated data, tampering, reordered, dropped and appended chunks,
-truncation and I/O errors.
+truncation, read and write errors, and short or interrupted reads.
