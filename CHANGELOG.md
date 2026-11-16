@@ -19,5 +19,8 @@ and this project adheres to
 - `LICENSE` with the GNU General Public License v3.0 or later.
 - `.gitignore` for Rust, Tauri, Node.js and React, including secrets and
   local development data.
+- Initial project structure: Tauri 2 desktop app skeleton with a React and
+  TypeScript interface, Vitest and Testing Library, ESLint, Prettier, rustfmt
+  and clippy.
 
 [Unreleased]: https://github.com/acevflow/lockwell/commits/main

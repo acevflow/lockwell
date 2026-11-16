@@ -155,3 +155,6 @@ tauri-private-key*
 /vaults/
 /dev-data/
 /local-data/
+
+# Local overrides (Vite)
+*.local

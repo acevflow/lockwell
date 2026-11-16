@@ -79,17 +79,44 @@ cd lockwell
 
 ### Installing, running, testing and linting
 
-The project is in Phase 1 (Foundations) and the application skeleton does not
-exist yet. The exact commands to install dependencies, run the app in
-development mode, run the tests and run the linters will be documented here
-once the skeleton is in place.
+npm is the package manager. Run every command from the repository root:
 
-The planned tooling is:
+```powershell
+# Install the exact dependency versions from package-lock.json
+npm ci
+
+# Run the app in development mode (Vite dev server and the Tauri window)
+npm run tauri dev
+
+# Build the interface only
+npm run build
+
+# Build the desktop app in release mode
+npm run tauri build
+
+# Run all tests: Vitest for the interface, then cargo test for the core
+npm test
+
+# Lint: ESLint for TypeScript and React, clippy (warnings as errors) for Rust
+npm run lint
+
+# Check formatting with Prettier and rustfmt, or apply it
+npm run format:check
+npm run format
+
+# Type check the TypeScript code
+npm run typecheck
+```
+
+The tooling is:
 
 - **Tests:** Rust tests for the core, Vitest and Testing Library for the
   interface.
 - **Formatting and lint:** rustfmt and clippy for Rust, ESLint and Prettier for
   TypeScript and React.
+
+Run `npm test`, `npm run lint`, `npm run format:check` and `npm run typecheck`
+before you open a pull request.
 
 ## Project conventions
 
