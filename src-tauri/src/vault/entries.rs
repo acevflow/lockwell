@@ -504,9 +504,12 @@ mod tests {
         );
     }
 
+    /// Makes one field of an entry one character longer.
+    type Lengthen = fn(&mut EntryInput);
+
     #[test]
     fn names_the_field_that_is_too_long() {
-        let cases: [(fn(&mut EntryInput), &str); 5] = [
+        let cases: [(Lengthen, &str); 5] = [
             (
                 |e| e.title.push('x'),
                 "the title must have at most 200 characters",
