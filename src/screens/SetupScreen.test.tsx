@@ -1,3 +1,4 @@
+/** Tests of the first-run screen: creating a vault or restoring a backup. */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { callsTo, failWith, mockCommands } from "../test/tauriMock";

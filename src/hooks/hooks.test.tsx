@@ -1,3 +1,4 @@
+/** Tests of the hooks: activity reporting, error state, lock event and initial load. */
 import { listen } from "@tauri-apps/api/event";
 import { act, fireEvent, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";

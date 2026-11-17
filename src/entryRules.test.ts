@@ -1,3 +1,4 @@
+/** Tests of the entry search. */
 import { describe, expect, it } from "vitest";
 import type { EntrySummary } from "./api/types";
 import { filterEntries } from "./entryRules";

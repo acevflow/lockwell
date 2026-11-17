@@ -1,3 +1,4 @@
+/** Tests of the small shared components: password field, error banner and confirm dialog. */
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import ConfirmDialog from "./ConfirmDialog";

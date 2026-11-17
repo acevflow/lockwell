@@ -1,3 +1,4 @@
+/** Tests of the entry components: form, list and read-only view. */
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ApiError } from "../api/client";

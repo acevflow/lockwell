@@ -9,14 +9,21 @@ import { commandError, mockCommands } from "./tauriMock";
 
 /** A backup that `restore_backup` brings back, as the native dialog would. */
 export interface FakeBackup {
+  /** Master password the vault had when the backup was made. */
   password: string;
+  /** Entries stored in the backup. */
   entries: Entry[];
 }
 
+/** The state of the fake core. Tests read it to check what the interface did. */
 export interface FakeCoreState {
+  /** A vault has been created. */
   exists: boolean;
+  /** The vault is unlocked. */
   unlocked: boolean;
+  /** The master password of the vault. */
   password: string;
+  /** Entries by id. */
   entries: Map<string, Entry>;
   /** What the core copied to the clipboard. */
   clipboard: string | null;
@@ -24,6 +31,7 @@ export interface FakeCoreState {
   backup: FakeBackup | null;
 }
 
+/** The only fields an entry input may have, like `deny_unknown_fields` in the core. */
 const EDITABLE_FIELDS = ["title", "username", "password", "url", "notes"];
 
 /** A fixed timestamp: the fake never reads the clock. */

@@ -1,3 +1,4 @@
+/** Tests of the root component: which screen it shows and how it reacts to locks. */
 import { listen } from "@tauri-apps/api/event";
 import {
   act,

@@ -1,3 +1,4 @@
+/** Tests of the byte-size formatting. */
 import { describe, expect, it } from "vitest";
 import { formatBytes } from "./format";
 
