@@ -5,7 +5,7 @@ and complete a first session.
 **Audience:** people who want to build and try lockwell. Contributors should
 continue with the [development guide](development.md).
 
-lockwell 0.1.1 installers for Windows (MSI and NSIS) are on the
+lockwell 0.1.2 installers for Windows (MSI and NSIS) are on the
 [releases page](https://github.com/acevflow/lockwell/releases/latest), with a
 `SHA256SUMS.txt` file to verify them. They are not code-signed, so Windows
 SmartScreen may warn you. This guide shows how to build it from source.
@@ -56,8 +56,8 @@ npm run tauri build
 
 The executable is `src-tauri/target/release/lockwell.exe`. On Windows the
 build also produces an MSI installer in `src-tauri/target/release/bundle/msi/`
-(`lockwell_0.1.1_x64_en-US.msi`) and an NSIS installer in
-`src-tauri/target/release/bundle/nsis/` (`lockwell_0.1.1_x64-setup.exe`). To
+(`lockwell_0.1.2_x64_en-US.msi`) and an NSIS installer in
+`src-tauri/target/release/bundle/nsis/` (`lockwell_0.1.2_x64-setup.exe`). To
 build only the interface, run `npm run build`.
 
 ## Configuration
