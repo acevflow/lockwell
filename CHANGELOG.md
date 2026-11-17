@@ -11,8 +11,8 @@ and this project adheres to
 ## [0.1.2] - 2026-11-17
 
 The `v0.1.0` and `v0.1.1` tags were pushed but their release workflow failed,
-so no release was published for them. This version contains the same
-application and is the first published release.
+so no release was published for them, and the tags were deleted. This version
+contains the same application and is the first published release.
 
 ### Fixed
 
@@ -139,6 +139,6 @@ First beta. It has not been audited.
   are used from the core.
 
 [Unreleased]: https://github.com/acevflow/lockwell/compare/v0.1.2...HEAD
-[0.1.2]: https://github.com/acevflow/lockwell/compare/v0.1.1...v0.1.2
-[0.1.1]: https://github.com/acevflow/lockwell/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/acevflow/lockwell/releases/tag/v0.1.0
+[0.1.2]: https://github.com/acevflow/lockwell/releases/tag/v0.1.2
+[0.1.1]: https://github.com/acevflow/lockwell/commit/fbbd9ee19c197ece8554431a16c3c40e0ef3f700
+[0.1.0]: https://github.com/acevflow/lockwell/commit/aff4498decb9924bdf9a6b1bbf739b6708c940ae
