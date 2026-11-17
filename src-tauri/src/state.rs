@@ -47,8 +47,12 @@ impl AppState {
         operation: impl FnOnce(&mut Vault) -> AppResult<T>,
     ) -> AppResult<T> {
         self.touch();
-        let result = operation(&mut lock(&self.vault));
+        let mut vault = lock(&self.vault);
+        let result = operation(&mut vault);
+        // Still holding the vault, so an idle check that was waiting for it
+        // sees this activity.
         self.touch();
+        drop(vault);
         result
     }
 
@@ -77,21 +81,34 @@ impl AppState {
     /// Locks the vault and clears a secret this app left on the clipboard.
     /// Returns whether the vault was unlocked.
     pub fn lock(&self) -> bool {
+        self.lock_vault(None)
+    }
+
+    /// Locks the vault if it is unlocked and there was no activity for the
+    /// idle timeout as of `now`. Returns whether it locked.
+    ///
+    /// Inactivity is checked once the vault is free: an operation that was
+    /// running counts as activity when it ends.
+    pub fn lock_if_idle(&self, now: Instant) -> bool {
+        self.lock_vault(Some(now))
+    }
+
+    /// Locks the vault and clears the clipboard. With `idle_as_of`, it does
+    /// nothing unless the user has been idle as of that time.
+    fn lock_vault(&self, idle_as_of: Option<Instant>) -> bool {
         let was_unlocked = {
             let mut vault = lock(&self.vault);
+            if let Some(now) = idle_as_of
+                && !lock(&self.activity).is_idle(now)
+            {
+                return false;
+            }
             let was_unlocked = vault.is_unlocked();
             vault.lock();
             was_unlocked
         };
         lock(&self.clipboard).clear_if_unchanged(None);
         was_unlocked
-    }
-
-    /// Locks the vault if it is unlocked and there was no activity for the
-    /// idle timeout as of `now`. Returns whether it locked.
-    pub fn lock_if_idle(&self, now: Instant) -> bool {
-        let idle = lock(&self.activity).is_idle(now);
-        idle && self.lock()
     }
 
     /// Copies a secret to the clipboard and returns its generation.
@@ -209,6 +226,30 @@ mod tests {
         std::thread::sleep(Duration::from_millis(20));
         state.touch();
         assert!(!state.lock_if_idle(start + IDLE_TIMEOUT));
+    }
+
+    #[test]
+    fn a_long_operation_postpones_the_idle_lock_that_was_waiting_for_it() {
+        let (_dir, _fake, state) = unlocked_state();
+        let (started_sender, started) = std::sync::mpsc::channel();
+        let worker_state = state.clone();
+        let worker = std::thread::spawn(move || {
+            worker_state.with_vault(|_| {
+                started_sender.send(()).unwrap();
+                std::thread::sleep(Duration::from_millis(500));
+                Ok(())
+            })
+        });
+        started.recv().unwrap();
+
+        // The watcher sees no activity for the whole timeout at `later`, but
+        // has to wait for the operation, which counts as activity when it ends.
+        let later = Instant::now() + IDLE_TIMEOUT + Duration::from_millis(100);
+        let locked = state.lock_if_idle(later);
+        worker.join().unwrap().unwrap();
+
+        assert!(!locked);
+        assert!(is_unlocked(&state));
     }
 
     #[test]
