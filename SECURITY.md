@@ -7,12 +7,12 @@ users safe.
 
 ## Supported versions
 
-lockwell has not published a release yet. Until the first release, only the
-`main` branch is supported. Once releases exist, only the latest published
-version will receive security fixes.
+lockwell 0.1.x is a beta that has not been audited. Only the latest published
+version and the `main` branch receive security fixes.
 
 | Version                  | Supported |
 | ------------------------ | --------- |
+| Latest published version | Yes       |
 | `main` branch            | Yes       |
 | Any other branch or fork | No        |
 
