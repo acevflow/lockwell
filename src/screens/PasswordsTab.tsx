@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   createEntry,
   deleteEntry,
@@ -15,6 +15,7 @@ import EntryView from "../components/EntryView";
 import ErrorBanner from "../components/ErrorBanner";
 import { filterEntries } from "../entryRules";
 import { useApiError } from "../hooks/useApiError";
+import { useInitialLoad } from "../hooks/useInitialLoad";
 
 interface PasswordsTabProps {
   /** Called when the core reports that the vault is locked. */
@@ -44,20 +45,7 @@ function PasswordsTab({ onLocked }: PasswordsTabProps) {
     }
   }, [report]);
 
-  useEffect(() => {
-    let active = true;
-    listEntries().then(
-      (list) => {
-        if (active) setEntries(list);
-      },
-      (loadError: unknown) => {
-        if (active) report(loadError);
-      },
-    );
-    return () => {
-      active = false;
-    };
-  }, [report]);
+  useInitialLoad(listEntries, setEntries, report);
 
   const visible = useMemo(
     () => filterEntries(entries ?? [], query),

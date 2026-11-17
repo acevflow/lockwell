@@ -5,6 +5,7 @@ import {
   call,
   errorMessage,
   isLockedError,
+  isWrongPasswordError,
   toApiError,
 } from "./client";
 
@@ -37,6 +38,16 @@ describe("errorMessage", () => {
 
   it("falls back for empty messages", () => {
     expect(errorMessage(commandError("io", " "))).toBe("Something went wrong.");
+  });
+});
+
+describe("isWrongPasswordError", () => {
+  it("detects only the wrong_password code", () => {
+    expect(isWrongPasswordError(new ApiError("wrong_password", "x"))).toBe(
+      true,
+    );
+    expect(isWrongPasswordError(new ApiError("io", "x"))).toBe(false);
+    expect(isWrongPasswordError(new Error("wrong_password"))).toBe(false);
   });
 });
 

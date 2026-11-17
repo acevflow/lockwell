@@ -67,6 +67,7 @@ how it fits in the project.
 | [`components/RestoreBackupForm.tsx`](src/components/RestoreBackupForm.tsx.md) | Restore a backup.                        |
 | [`components/backup.test.tsx`](src/components/backup.test.tsx.md)             | Tests for the backup components.         |
 | [`hooks/useApiError.ts`](src/hooks/useApiError.ts.md)                         | Error state that handles a locked vault. |
+| [`hooks/useInitialLoad.ts`](src/hooks/useInitialLoad.ts.md)                   | Loads a list once on mount.              |
 | [`hooks/useActivityReporter.ts`](src/hooks/useActivityReporter.ts.md)         | Reports user activity to the core.       |
 | [`hooks/useVaultLockedEvent.ts`](src/hooks/useVaultLockedEvent.ts.md)         | Reacts to the lock event.                |
 | [`hooks/hooks.test.tsx`](src/hooks/hooks.test.tsx.md)                         | Tests for the hooks.                     |

@@ -41,6 +41,11 @@ export function isLockedError(error: unknown): boolean {
   return error instanceof ApiError && error.code === "locked";
 }
 
+/** True if the error means the master password was wrong. */
+export function isWrongPasswordError(error: unknown): boolean {
+  return error instanceof ApiError && error.code === "wrong_password";
+}
+
 /** A message for people: capitalized and ending with a period. */
 export function errorMessage(error: unknown): string {
   const text = toApiError(error).message.trim() || "Something went wrong";

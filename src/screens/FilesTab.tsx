@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { deleteFile, exportFile, importFiles, listFiles } from "../api/files";
 import type { FileSummary } from "../api/types";
 import ConfirmDialog from "../components/ConfirmDialog";
 import ErrorBanner from "../components/ErrorBanner";
 import { formatBytes } from "../format";
 import { useApiError } from "../hooks/useApiError";
+import { useInitialLoad } from "../hooks/useInitialLoad";
 
 interface FilesTabProps {
   /** Called when the core reports that the vault is locked. */
@@ -23,20 +24,7 @@ function FilesTab({ onLocked }: FilesTabProps) {
     setFiles(await listFiles());
   }, []);
 
-  useEffect(() => {
-    let active = true;
-    listFiles().then(
-      (list) => {
-        if (active) setFiles(list);
-      },
-      (loadError: unknown) => {
-        if (active) report(loadError);
-      },
-    );
-    return () => {
-      active = false;
-    };
-  }, [report]);
+  useInitialLoad(listFiles, setFiles, report);
 
   async function run(label: string, action: () => Promise<string | null>) {
     clear();

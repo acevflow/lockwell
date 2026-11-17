@@ -1,5 +1,9 @@
 import { useState, type FormEvent } from "react";
-import { ApiError, errorMessage, isLockedError } from "../api/client";
+import {
+  errorMessage,
+  isLockedError,
+  isWrongPasswordError,
+} from "../api/client";
 import { changeMasterPassword } from "../api/vault";
 import CreateBackupPanel from "../components/CreateBackupPanel";
 import ErrorBanner from "../components/ErrorBanner";
@@ -64,7 +68,7 @@ function SettingsTab({ onLocked, onRestored }: SettingsTabProps) {
         return;
       }
       setError(
-        changeError instanceof ApiError && changeError.code === "wrong_password"
+        isWrongPasswordError(changeError)
           ? "The current master password is incorrect."
           : errorMessage(changeError),
       );

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { ApiError, errorMessage } from "../api/client";
+import { errorMessage, isWrongPasswordError } from "../api/client";
 import { unlockVault } from "../api/vault";
 import ErrorBanner from "../components/ErrorBanner";
 import PasswordInput from "../components/PasswordInput";
@@ -31,7 +31,7 @@ function UnlockScreen({ onUnlocked, notice }: UnlockScreenProps) {
       onUnlocked();
     } catch (unlockError) {
       setError(
-        unlockError instanceof ApiError && unlockError.code === "wrong_password"
+        isWrongPasswordError(unlockError)
           ? "Incorrect master password."
           : errorMessage(unlockError),
       );

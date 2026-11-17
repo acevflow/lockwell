@@ -9,6 +9,7 @@ import {
   useActivityReporter,
 } from "./useActivityReporter";
 import { useApiError } from "./useApiError";
+import { useInitialLoad } from "./useInitialLoad";
 import { useVaultLockedEvent } from "./useVaultLockedEvent";
 
 /** A fixed, arbitrary point in time, so the tests never read the real clock. */
@@ -179,5 +180,46 @@ describe("useVaultLockedEvent", () => {
       failure,
     );
     logged.mockRestore();
+  });
+});
+
+describe("useInitialLoad", () => {
+  it("passes the result to onLoaded", async () => {
+    const onLoaded = vi.fn();
+    const onError = vi.fn();
+    const load = vi.fn().mockResolvedValue(["a"]);
+
+    renderHook(() => useInitialLoad(load, onLoaded, onError));
+    await act(async () => {});
+
+    expect(onLoaded).toHaveBeenCalledWith(["a"]);
+    expect(onError).not.toHaveBeenCalled();
+  });
+
+  it("passes a failure to onError", async () => {
+    const onLoaded = vi.fn();
+    const onError = vi.fn();
+    const failure = new Error("nope");
+    const load = vi.fn().mockRejectedValue(failure);
+
+    renderHook(() => useInitialLoad(load, onLoaded, onError));
+    await act(async () => {});
+
+    expect(onError).toHaveBeenCalledWith(failure);
+    expect(onLoaded).not.toHaveBeenCalled();
+  });
+
+  it("ignores results that arrive after unmounting", async () => {
+    const onLoaded = vi.fn();
+    const onError = vi.fn();
+    const pending = deferred<string>();
+
+    const { unmount } = renderHook(() =>
+      useInitialLoad(() => pending.promise, onLoaded, onError),
+    );
+    unmount();
+    await act(async () => pending.resolve("late"));
+
+    expect(onLoaded).not.toHaveBeenCalled();
   });
 });
