@@ -16,6 +16,12 @@ and this project adheres to
   smoke test, a results template, how to report defects and a traceability
   table to the automated tests. Linked from the README.
 
+### Fixed
+
+- Saving a decrypted copy or a backup failed with "invalid filename" when the
+  destination name was close to the 255-character limit, because the temporary
+  file name was longer than the target's.
+
 ## [0.1.0] - 2026-11-16
 
 First beta. It has not been audited.

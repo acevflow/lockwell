@@ -28,7 +28,9 @@ disk.
 Paths inside the vault folder are refused as source or destination
 (`check_outside_vault`, also used by backups). All
 writes go through a temporary file that is renamed when complete
-(`write_atomically`, also used by backups).
+(`write_atomically`, also used by backups). The temporary name is fixed-length
+(`.lockwell-<16 hex digits>.tmp`), so files whose names are at the 255-character
+limit can still be saved.
 
 Tests cover empty, small, chunk-sized and large files, that names and content
 are not visible on disk, Unicode names, sorting, overwrite protection,

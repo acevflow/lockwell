@@ -299,18 +299,16 @@ pub fn validate_file_name(name: &str) -> AppResult<()> {
 
 /// Writes `target` through a temporary file in the same folder that is
 /// renamed over `target` only if `write` succeeds; otherwise it is removed.
+/// The temporary name is `.lockwell-<16 hex digits>.tmp`, so it is short
+/// enough whatever the length of `target`'s name.
 pub(crate) fn write_atomically<T>(
     target: &Path,
     write: impl FnOnce(&mut BufWriter<File>) -> AppResult<T>,
 ) -> AppResult<T> {
     let suffix = to_hex(&random_array::<8>()?);
-    let temporary = target.with_file_name(format!(
-        ".{}.{suffix}.tmp",
-        target
-            .file_name()
-            .and_then(|name| name.to_str())
-            .unwrap_or("lockwell")
-    ));
+    // A fixed-length name: one derived from `target` could exceed the file
+    // system's name limit when the target's name is long.
+    let temporary = target.with_file_name(format!(".lockwell-{suffix}.tmp"));
     let file = OpenOptions::new()
         .write(true)
         .create_new(true)
@@ -754,6 +752,23 @@ mod tests {
 
         assert_eq!(result.unwrap_err(), AppError::Corrupt("stop".into()));
         assert_eq!(fs::read(&target).unwrap(), b"original");
+        assert_eq!(fs::read_dir(dir.path()).unwrap().count(), 1);
+    }
+
+    #[test]
+    fn atomic_writes_work_for_names_at_the_file_name_limit() {
+        // The temporary name must fit in the file system's name limit even
+        // when the target name is as long as a name can be.
+        let dir = tempfile::tempdir().unwrap();
+        let target = dir.path().join("a".repeat(MAX_FILE_NAME_CHARS));
+
+        write_atomically(&target, |writer| {
+            writer.write_all(b"long")?;
+            Ok(())
+        })
+        .unwrap();
+
+        assert_eq!(fs::read(&target).unwrap(), b"long");
         assert_eq!(fs::read_dir(dir.path()).unwrap().count(), 1);
     }
 
