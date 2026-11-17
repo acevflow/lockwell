@@ -10,6 +10,12 @@ and this project adheres to
 
 ### Added
 
+- Code coverage measurement for the interface (Vitest) and the Rust core
+  (`npm run test:coverage`), also run in CI with the report uploaded.
+- Many more automated tests: integration tests for the vault, files, backups
+  and security in the Rust core, and tests for every command wrapper, hook,
+  component and screen of the interface, plus end-to-end flows against a
+  stateful fake core.
 - Project documentation in `docs/`: an index, getting started, user guide,
   architecture, development guide, reference (commands, error codes, data and
   file formats) and a security document with the threat model. Linked from the
@@ -26,6 +32,9 @@ and this project adheres to
 
 ### Changed
 
+- Internal refactoring of the Rust core and the interface (shared helpers for
+  the file and backup commands, the vault and the initial list load; shorter
+  functions; named constants). Behavior is unchanged.
 - `docs/files/` now covers source code only. The short documents for tests,
   test support code and configuration files were removed, and each document
   links to the tests of its file.
