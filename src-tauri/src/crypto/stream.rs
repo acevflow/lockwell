@@ -33,9 +33,14 @@ pub const CHUNK_LEN: usize = 64 * 1024;
 /// 5 bytes STREAM uses for its counter and last-chunk flag.
 pub const NONCE_PREFIX_LEN: usize = 19;
 
+/// The random per-stream nonce prefix, as typed by the `aead-stream` crate.
 type Prefix = aead_stream::Nonce<XChaCha20Poly1305, aead_stream::StreamBE32<XChaCha20Poly1305>>;
 
 /// Encrypts everything read from `reader` into `writer`.
+///
+/// Memory use is constant (two chunk buffers, wiped on drop), whatever the
+/// input size. Each chunk is held back until the next read shows whether it
+/// is the last one, because STREAM encrypts the final chunk differently.
 ///
 /// `aad` is authenticated with every chunk, binding the stream to its
 /// context (for example, the id of the file it belongs to).
@@ -85,6 +90,9 @@ pub fn encrypt<R: Read, W: Write>(
 }
 
 /// Decrypts a stream produced by [`encrypt`] with the same key and `aad`.
+///
+/// Plaintext is written chunk by chunk, so on error `writer` may already hold
+/// verified chunks (see the module docs): discard the destination.
 ///
 /// Returns the number of plaintext bytes written.
 ///
@@ -312,6 +320,7 @@ mod tests {
         );
     }
 
+    /// Cutting one byte off the last chunk breaks its tag.
     #[test]
     fn truncation_inside_a_chunk_fails() {
         let sealed = encrypt_vec(&data(CHUNK_LEN + 100), b"");
@@ -321,6 +330,7 @@ mod tests {
         );
     }
 
+    /// Inputs too short to hold a prefix, a chunk or even a tag are `Truncated`.
     #[test]
     fn missing_or_short_data_is_truncated() {
         let sealed = encrypt_vec(&data(10), b"");
@@ -349,6 +359,8 @@ mod tests {
         );
     }
 
+    /// A valid chunk appended after a full-size last chunk is rejected: the old
+    /// last chunk no longer decrypts as a regular one.
     #[test]
     fn appended_chunk_after_full_last_chunk_fails() {
         let mut sealed = encrypt_vec(&data(CHUNK_LEN), b"");
@@ -442,6 +454,7 @@ mod tests {
         }
     }
 
+    /// `Interrupted` errors and short reads must not corrupt or abort the stream.
     #[test]
     fn short_and_interrupted_reads_are_retried() {
         let plaintext = data(2 * CHUNK_LEN + 5);

@@ -3,6 +3,9 @@
 //! A sealed record is `nonce (24 bytes) || ciphertext || tag (16 bytes)`.
 //! The nonce is random for every encryption; with 192-bit nonces random
 //! generation is safe for any realistic number of records.
+//!
+//! Use this module for small records held in memory. Files and backups go
+//! through [`super::stream`] instead.
 
 use chacha20poly1305::aead::{Aead, KeyInit, Payload};
 use chacha20poly1305::{XChaCha20Poly1305, XNonce};
@@ -23,6 +26,11 @@ pub const OVERHEAD: usize = NONCE_LEN + TAG_LEN;
 ///
 /// `aad` is authenticated but not encrypted: decryption only succeeds with
 /// the same value, which ties a record to its context (type, id, version).
+/// Callers must always pass the context, so a valid record cannot be swapped
+/// for another one encrypted under the same key.
+///
+/// The result is `nonce || ciphertext || tag`, [`OVERHEAD`] bytes longer than
+/// the plaintext.
 ///
 /// # Errors
 /// - [`CryptoError::Random`] if no nonce can be generated.
@@ -153,6 +161,7 @@ only one tip for the future, sunscreen would be it.";
         assert!(open(&key, &sealed, b"").unwrap().is_empty());
     }
 
+    /// Encrypting the same data twice gives different nonces and output.
     #[test]
     fn uses_a_fresh_nonce_each_time() {
         let key = test_key();
@@ -186,6 +195,7 @@ only one tip for the future, sunscreen would be it.";
         );
     }
 
+    /// Flipping any single byte (nonce, ciphertext or tag) is detected.
     #[test]
     fn tampering_anywhere_fails() {
         let key = test_key();
@@ -201,6 +211,8 @@ only one tip for the future, sunscreen would be it.";
         }
     }
 
+    /// Shorter than nonce plus tag is `Truncated`; a cut that keeps that
+    /// minimum fails authentication instead.
     #[test]
     fn truncated_input_fails() {
         let key = test_key();

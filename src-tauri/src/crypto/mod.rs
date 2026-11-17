@@ -9,6 +9,11 @@
 //!   and backups of any size.
 //! - [`keys`]: the [`keys::SecretKey`] type, wiped from memory on drop.
 //! - [`random`]: random bytes and identifiers from the operating system.
+//!
+//! Code outside this module obtains keys and ciphertext only through these
+//! functions. Callers must keep keys inside [`keys::SecretKey`] and bind every
+//! ciphertext to its context through the associated data (`aad`), so a record
+//! cannot be moved somewhere else and still authenticate.
 
 pub mod aead;
 pub mod kdf;
@@ -20,7 +25,9 @@ use thiserror::Error;
 
 /// Errors returned by the cryptographic core.
 ///
-/// Messages never include key material, passwords or plaintext.
+/// Messages never include key material, passwords or plaintext. A wrong key,
+/// a wrong context and tampering are deliberately reported as the same
+/// [`CryptoError::Decryption`], so the error does not help tell them apart.
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum CryptoError {
     /// The operating system random number generator failed.
@@ -49,6 +56,8 @@ pub enum CryptoError {
     Io(String),
 }
 
+/// Keeps only the [`std::io::ErrorKind`] of an I/O error: the original message
+/// may contain file paths, which must not travel in errors.
 impl From<std::io::Error> for CryptoError {
     fn from(error: std::io::Error) -> Self {
         CryptoError::Io(error.kind().to_string())
@@ -71,6 +80,7 @@ mod tests {
         assert!(!mapped.to_string().contains("private"));
     }
 
+    /// The `Display` text of each error is stable and generic.
     #[test]
     fn messages_describe_the_failure() {
         assert_eq!(

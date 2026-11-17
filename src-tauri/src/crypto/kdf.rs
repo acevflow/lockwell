@@ -1,4 +1,9 @@
 //! Argon2id key derivation from the master password.
+//!
+//! The derived key is a wrapping key: the vault header uses it only to
+//! encrypt the vault's own random key. The cost parameters and the salt are
+//! not secret and are stored with the vault, which is why the parameters are
+//! validated before every derivation.
 
 use argon2::{Algorithm, Argon2, Params, Version};
 
@@ -58,6 +63,11 @@ impl KdfParams {
 }
 
 /// Derives a 256-bit key from `password` and `salt` with Argon2id (v1.3).
+///
+/// The work is deliberately slow and memory-hungry (see [`KdfParams`]), so
+/// call it from a blocking context, never directly from an async task. The
+/// salt must be random and unique per vault. The caller owns the `password`
+/// bytes and must wipe them; the returned key is wiped on drop.
 ///
 /// # Errors
 /// - [`CryptoError::InvalidKdfParams`] if `params` are out of range.
@@ -131,6 +141,7 @@ mod tests {
         );
     }
 
+    /// Argon2 requires at least 8 salt bytes; shorter ones fail derivation.
     #[test]
     fn rejects_a_salt_shorter_than_argon2_minimum() {
         assert_eq!(
@@ -257,6 +268,7 @@ mod tests {
         }
     }
 
+    /// The memory floor is 8 KiB per lane, so 4 lanes need 32 KiB.
     #[test]
     fn derives_with_the_smallest_valid_memory_per_lane() {
         let params = KdfParams {
