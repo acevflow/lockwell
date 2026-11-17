@@ -26,7 +26,9 @@ disk.
 - `delete_file(id)` removes the blob and the row.
 
 Paths inside the vault folder are refused as source or destination
-(`check_outside_vault`, also used by backups). All
+(`check_outside_vault`, built on `check_outside_folder`, which restoring a
+backup also uses). `blob_file_name(id)` gives the name of a blob, also used by
+backups. All
 writes go through a temporary file that is renamed when complete
 (`write_atomically`, also used by backups). The temporary name is fixed-length
 (`.lockwell-<16 hex digits>.tmp`), so files whose names are at the 255-character

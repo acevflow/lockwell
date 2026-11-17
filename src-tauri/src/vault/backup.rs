@@ -29,12 +29,15 @@ use std::fs::{self, File, OpenOptions};
 use std::io::{self, BufReader, BufWriter, Cursor, Read, Write};
 use std::path::{Path, PathBuf};
 
-use super::files::{BLOB_EXTENSION, BLOB_MAGIC, write_atomically};
+use super::files::{
+    BLOB_EXTENSION, BLOB_MAGIC, blob_file_name, check_outside_folder, write_atomically,
+};
 use super::header::{HEADER_LEN, VaultHeader};
 use super::session::{DATABASE_FILE, FILES_DIR, UnlockedVault, Vault, read_header};
+use super::{decrypt_failure, random_suffix};
 use crate::crypto::keys::SecretKey;
-use crate::crypto::random::{is_valid_id, random_array, to_hex};
-use crate::crypto::{CryptoError, stream};
+use crate::crypto::random::is_valid_id;
+use crate::crypto::stream;
 use crate::error::{AppError, AppResult};
 use crate::storage::db::{self, Table};
 
@@ -90,7 +93,7 @@ impl UnlockedVault {
         parts.push_back(Box::new(Cursor::new(CONTAINER_MAGIC.to_vec())));
         add_record(&mut parts, KIND_DATABASE, DATABASE_FILE, snapshot)?;
         for (id, _) in db::list_records(&self.conn, Table::Files)? {
-            let name = format!("{id}.{BLOB_EXTENSION}");
+            let name = blob_file_name(&id);
             let blob = self.files_dir().join(&name);
             if !blob.is_file() {
                 return Err(AppError::Corrupt("a stored file is missing".into()));
@@ -118,12 +121,8 @@ impl Vault {
         if !fs::metadata(backup)?.is_file() {
             return Err(AppError::invalid("the backup must be a file"));
         }
-        if self.dir().exists()
-            && fs::canonicalize(backup)?.starts_with(fs::canonicalize(self.dir())?)
-        {
-            return Err(AppError::invalid(
-                "files inside the vault folder cannot be used",
-            ));
+        if self.dir().exists() {
+            check_outside_folder(self.dir(), backup)?;
         }
 
         let mut reader = BufReader::new(File::open(backup)?);
@@ -199,12 +198,8 @@ fn stage_backup(
                 .create_new(true)
                 .open(&contents_path)?,
         );
-        stream::decrypt(key, &backup_aad(prefix), reader, &mut contents).map_err(|error| {
-            match error {
-                CryptoError::Io(message) => AppError::Io(message),
-                _ => AppError::Corrupt("the backup is damaged or incomplete".into()),
-            }
-        })?;
+        stream::decrypt(key, &backup_aad(prefix), reader, &mut contents)
+            .map_err(|error| decrypt_failure(error, "the backup is damaged or incomplete"))?;
         contents.flush()?;
     }
     unpack_contents(&mut BufReader::new(File::open(&contents_path)?), staging)?;
@@ -275,9 +270,7 @@ fn check_staged_vault(staging: &Path, header: &VaultHeader, key: &SecretKey) -> 
     };
     staged.list_entries()?;
     for file in staged.list_files()? {
-        let blob = staged
-            .files_dir()
-            .join(format!("{}.{BLOB_EXTENSION}", file.id));
+        let blob = staged.files_dir().join(blob_file_name(&file.id));
         let mut magic = [0u8; 4];
         File::open(&blob)
             .and_then(|mut opened| opened.read_exact(&mut magic))
@@ -361,10 +354,6 @@ impl Read for Concat {
 fn is_blob_name(name: &str) -> bool {
     name.strip_suffix(&format!(".{BLOB_EXTENSION}"))
         .is_some_and(is_valid_id)
-}
-
-fn random_suffix() -> AppResult<String> {
-    Ok(to_hex(&random_array::<8>()?))
 }
 
 fn read_exact(reader: &mut impl Read, buffer: &mut [u8]) -> AppResult<()> {

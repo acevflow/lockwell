@@ -20,9 +20,9 @@ use serde::{Deserialize, Serialize};
 use zeroize::Zeroizing;
 
 use super::entries::check_id;
-use super::now_millis;
 use super::session::UnlockedVault;
-use crate::crypto::random::{random_array, random_id, to_hex};
+use super::{decrypt_failure, now_millis, random_suffix};
+use crate::crypto::random::random_id;
 use crate::crypto::{aead, stream};
 use crate::error::{AppError, AppResult};
 use crate::storage::db::{self, Table};
@@ -172,12 +172,8 @@ impl UnlockedVault {
                     "the encrypted file has an unknown format".into(),
                 ));
             }
-            stream::decrypt(&self.key, &blob_aad(id), &mut reader, writer).map_err(|error| {
-                match error {
-                    crate::crypto::CryptoError::Io(message) => AppError::Io(message),
-                    _ => AppError::Corrupt("the encrypted file failed to decrypt".into()),
-                }
-            })
+            stream::decrypt(&self.key, &blob_aad(id), &mut reader, writer)
+                .map_err(|error| decrypt_failure(error, "the encrypted file failed to decrypt"))
         })?;
         if written != file.size {
             // Authenticated content cannot change size; this is defensive.
@@ -205,30 +201,13 @@ impl UnlockedVault {
     }
 
     fn blob_path(&self, id: &str) -> PathBuf {
-        self.files_dir().join(format!("{id}.{BLOB_EXTENSION}"))
+        self.files_dir().join(blob_file_name(id))
     }
 
     /// Refuses paths inside the vault folder, so the vault's own files are
     /// never imported or overwritten.
     pub(crate) fn check_outside_vault(&self, path: &Path) -> AppResult<()> {
-        let vault = fs::canonicalize(&self.dir)?;
-        let target = match fs::canonicalize(path) {
-            Ok(resolved) => resolved,
-            Err(_) => {
-                let parent = path
-                    .parent()
-                    .filter(|parent| !parent.as_os_str().is_empty())
-                    .ok_or_else(|| AppError::invalid("the destination folder does not exist"))?;
-                fs::canonicalize(parent)
-                    .map_err(|_| AppError::invalid("the destination folder does not exist"))?
-            }
-        };
-        if target.starts_with(&vault) {
-            return Err(AppError::invalid(
-                "files inside the vault folder cannot be used",
-            ));
-        }
-        Ok(())
+        check_outside_folder(&self.dir, path)
     }
 
     fn encrypt_meta(&self, id: &str, meta: &FileMeta) -> AppResult<Vec<u8>> {
@@ -250,6 +229,33 @@ impl UnlockedVault {
             created_at: meta.created_at,
         })
     }
+}
+
+/// File name of the blob of the file `id`, such as `<id>.lwf`.
+pub(crate) fn blob_file_name(id: &str) -> String {
+    format!("{id}.{BLOB_EXTENSION}")
+}
+
+/// Refuses `path`, which may not exist yet, if it is inside `folder`.
+pub(crate) fn check_outside_folder(folder: &Path, path: &Path) -> AppResult<()> {
+    let folder = fs::canonicalize(folder)?;
+    let target = match fs::canonicalize(path) {
+        Ok(resolved) => resolved,
+        Err(_) => {
+            let parent = path
+                .parent()
+                .filter(|parent| !parent.as_os_str().is_empty())
+                .ok_or_else(|| AppError::invalid("the destination folder does not exist"))?;
+            fs::canonicalize(parent)
+                .map_err(|_| AppError::invalid("the destination folder does not exist"))?
+        }
+    };
+    if target.starts_with(&folder) {
+        return Err(AppError::invalid(
+            "files inside the vault folder cannot be used",
+        ));
+    }
+    Ok(())
 }
 
 /// Associated data of a file description row.
@@ -305,7 +311,7 @@ pub(crate) fn write_atomically<T>(
     target: &Path,
     write: impl FnOnce(&mut BufWriter<File>) -> AppResult<T>,
 ) -> AppResult<T> {
-    let suffix = to_hex(&random_array::<8>()?);
+    let suffix = random_suffix()?;
     // A fixed-length name: one derived from `target` could exceed the file
     // system's name limit when the target's name is long.
     let temporary = target.with_file_name(format!(".lockwell-{suffix}.tmp"));

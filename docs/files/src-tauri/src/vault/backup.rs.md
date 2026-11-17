@@ -25,7 +25,10 @@ are copied as they are, already encrypted.
   header matches, decrypts every entry and file description and checks every
   blob. Only then does it lock the vault and swap the folders, keeping the old
   vault until the swap succeeds. On any error the current vault is untouched
-  and the staging folder is removed. The vault is left locked.
+  and the staging folder is removed. The vault is left locked. The check that
+  the backup is not inside the vault folder, the blob names, the random
+  suffixes and the decryption error mapping are shared with `files.rs` and
+  `vault/mod.rs`.
 
 The container parser refuses unknown records, duplicate or missing databases,
 blob names that are not `<id>.lwf` (so no path traversal), truncated data and
