@@ -115,6 +115,17 @@ impl AppState {
         was_unlocked
     }
 
+    /// Clears a secret this app left on the clipboard when the app exits. The
+    /// clearing timer would die with the process, so without this a secret
+    /// copied just before closing would stay on the clipboard.
+    ///
+    /// It does not take the vault: exiting must not wait for a long operation,
+    /// and the key disappears with the process. Returns whether the clipboard
+    /// was cleared.
+    pub fn clear_clipboard_on_exit(&self) -> bool {
+        lock(&self.clipboard).clear_if_unchanged(None)
+    }
+
     /// Copies a secret to the clipboard and returns its generation, which the
     /// clearing timer later passes to [`AppState::clear_clipboard_if_unchanged`].
     ///
@@ -187,6 +198,29 @@ mod tests {
             tauri::async_runtime::block_on(state.with_vault_blocking(|vault| Ok(vault.status())))
                 .unwrap();
         assert!(!status.exists);
+    }
+
+    /// Closing the app within the clipboard time must not leave the secret
+    /// behind: the clearing timer dies with the process.
+    #[test]
+    fn exiting_clears_the_copied_secret_without_waiting_for_the_vault() {
+        let (_dir, fake, state) = unlocked_state();
+        state.copy_secret("example-secret").unwrap();
+        // A long operation holds the vault; exiting must not wait for it.
+        let held = lock(&state.vault);
+        assert!(state.clear_clipboard_on_exit());
+        drop(held);
+        assert_eq!(*fake.content.lock().unwrap(), None);
+    }
+
+    /// Text the user copied by themselves is never cleared on exit.
+    #[test]
+    fn exiting_leaves_text_the_user_copied() {
+        let (_dir, fake, state) = unlocked_state();
+        state.copy_secret("example-secret").unwrap();
+        *fake.content.lock().unwrap() = Some("user text".into());
+        assert!(!state.clear_clipboard_on_exit());
+        assert_eq!(fake.content.lock().unwrap().as_deref(), Some("user text"));
     }
 
     #[test]

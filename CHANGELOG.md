@@ -41,6 +41,10 @@ and this project adheres to
 
 ### Fixed
 
+- A password or username copied just before closing the app stayed on the
+  clipboard, because the 30-second clearing timer ended with the process. The
+  clipboard is now cleared when the app exits (only if it still holds the
+  copied text).
 - When adding several files failed part way, the Files list did not show the
   files that had already been added until the tab was opened again.
 - File sizes just below a unit boundary were shown as "1000 KB" or "1000 MB"

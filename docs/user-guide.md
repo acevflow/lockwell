@@ -45,7 +45,8 @@ follow [Restore a backup](#restore-a-backup).
 
   The unlock screen then tells you why it locked.
 - Locking wipes the vault key from memory, closes the database and clears the
-  clipboard if it still holds something you copied from lockwell.
+  clipboard if it still holds something you copied from lockwell. Closing the
+  app clears it too.
 
 ## Passwords
 

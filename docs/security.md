@@ -44,7 +44,7 @@ modification times of the vault files, which the operating system records.
 | Someone walks up to the computer while the vault is locked | Yes | The vault is locked and needs the master password. |
 | Someone walks up while the vault is unlocked | Reduced | The vault locks after 5 minutes of inactivity and when Windows locks. Until then, anyone using the session can read it. |
 | A crafted backup or header tries to exhaust memory or write outside the vault | Yes | Argon2id parameters are bounded, ids must be 32 lowercase hexadecimal characters, restore accepts only known file names, each once, and restore works in a staging folder. |
-| Secrets left on the clipboard | Yes | The core clears the clipboard 30 seconds after a copy (only if it still holds the copied text), and on lock. On Windows the copy is excluded from clipboard history and cloud sync. |
+| Secrets left on the clipboard | Yes | The core clears the clipboard 30 seconds after a copy (only if it still holds the copied text), on lock and when the app exits. On Windows the copy is excluded from clipboard history and cloud sync. |
 | Malware or a debugger running as the user, keyloggers, a compromised operating system | No | Such software can read the master password as it is typed and the memory of the running app. |
 | Physical access with the vault unlocked, forced disclosure of the password | No | Not defended. |
 | Forgotten master password | No | There is no recovery by design. |
