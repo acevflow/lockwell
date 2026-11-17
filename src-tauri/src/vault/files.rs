@@ -11,6 +11,10 @@
 //! The blob name is the random id, so neither the name nor the type of the
 //! file is visible on disk. Writes go to a temporary file that is renamed
 //! when complete, so an interrupted operation never leaves a partial file.
+//!
+//! Paths given by the user are never trusted blindly: files inside the vault
+//! folder are refused (see `check_outside_folder`), identifiers are checked
+//! before they build a path, and file names may not contain separators.
 
 use std::fs::{self, File, OpenOptions};
 use std::io::{BufReader, BufWriter, Read, Write};
@@ -48,7 +52,8 @@ pub struct FileSummary {
     pub created_at: i64,
 }
 
-/// The encrypted description of a file.
+/// The encrypted description of a file. The name lives only here, never in a
+/// path on disk.
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct FileMeta {
@@ -88,6 +93,10 @@ impl UnlockedVault {
     }
 
     /// Encrypts the file at `source` into the vault.
+    ///
+    /// The content is streamed, so file size is not limited by memory. The
+    /// blob is written first and the description second; if the second step
+    /// fails the blob is removed.
     ///
     /// # Errors
     /// - [`AppError::InvalidInput`] if `source` is not a regular file outside
@@ -196,6 +205,7 @@ impl UnlockedVault {
         }
     }
 
+    /// Path of the blob of file `id`. `id` must already be validated.
     fn blob_path(&self, id: &str) -> PathBuf {
         self.files_dir().join(blob_file_name(id))
     }
@@ -206,6 +216,7 @@ impl UnlockedVault {
         check_outside_folder(&self.dir, path)
     }
 
+    /// Serializes and encrypts a file description, bound to its id.
     fn encrypt_meta(&self, id: &str, meta: &FileMeta) -> AppResult<Vec<u8>> {
         let json = Zeroizing::new(
             serde_json::to_vec(meta).map_err(|_| AppError::invalid("the file cannot be saved"))?,
@@ -213,6 +224,7 @@ impl UnlockedVault {
         Ok(aead::seal(&self.key, &json, &meta_aad(id))?)
     }
 
+    /// Decrypts a description row; any failure is [`AppError::Corrupt`].
     fn decrypt_meta(&self, id: String, data: &[u8]) -> AppResult<FileSummary> {
         let json = aead::open(&self.key, data, &meta_aad(&id))
             .map_err(|_| AppError::Corrupt("a file description failed to decrypt".into()))?;
@@ -233,6 +245,14 @@ pub(crate) fn blob_file_name(id: &str) -> String {
 }
 
 /// Refuses `path`, which may not exist yet, if it is inside `folder`.
+///
+/// Both sides are resolved with `canonicalize`, so `..` segments and symbolic
+/// links cannot be used to reach the folder. When `path` does not exist yet,
+/// its parent folder is resolved instead.
+///
+/// # Errors
+/// Returns [`AppError::InvalidInput`] if `path` is inside `folder` or its
+/// parent folder does not exist.
 pub(crate) fn check_outside_folder(folder: &Path, path: &Path) -> AppResult<()> {
     let folder = fs::canonicalize(folder)?;
     let target = match fs::canonicalize(path) {
@@ -268,12 +288,13 @@ fn check_blob_magic(reader: &mut impl Read) -> AppResult<()> {
     Ok(())
 }
 
-/// Associated data of a file description row.
+/// Associated data of a file description row: type, format version and id.
+/// It differs from [`blob_aad`], so a description cannot stand in for content.
 fn meta_aad(id: &str) -> Vec<u8> {
     format!("lockwell:file:v1:{id}").into_bytes()
 }
 
-/// Associated data of a file blob.
+/// Associated data of a file blob: type, format version and id.
 fn blob_aad(id: &str) -> Vec<u8> {
     format!("lockwell:file-data:v1:{id}").into_bytes()
 }
@@ -289,7 +310,8 @@ fn file_name_of(path: &Path) -> AppResult<String> {
     Ok(name.to_owned())
 }
 
-/// Checks a file name: not empty, not too long, no control characters.
+/// Checks a file name: not empty, not too long, no control characters and no
+/// path separators.
 ///
 /// # Errors
 /// Returns [`AppError::InvalidInput`] explaining the problem.
@@ -317,6 +339,9 @@ pub fn validate_file_name(name: &str) -> AppResult<()> {
 /// renamed over `target` only if `write` succeeds; otherwise it is removed.
 /// The temporary name is `.lockwell-<16 hex digits>.tmp`, so it is short
 /// enough whatever the length of `target`'s name.
+///
+/// The data is flushed to disk before the rename. `target` is replaced if it
+/// exists, so callers decide beforehand whether overwriting is allowed.
 pub(crate) fn write_atomically<T>(
     target: &Path,
     write: impl FnOnce(&mut BufWriter<File>) -> AppResult<T>,
@@ -471,6 +496,7 @@ mod tests {
         assert_eq!(fs::read(&destination).unwrap(), b"new content");
     }
 
+    /// Export of a corrupted blob fails and leaves no partial plaintext file.
     #[test]
     fn a_damaged_blob_is_detected_and_nothing_is_written() {
         let (_vault_dir, vault) = unlocked_vault();
@@ -493,6 +519,8 @@ mod tests {
         assert_eq!(leftovers, 1, "only the source file should remain");
     }
 
+    /// A blob copied over another file's blob fails, because each blob is bound
+    /// to its own id.
     #[test]
     fn swapped_blobs_are_detected() {
         let (_vault_dir, vault) = unlocked_vault();

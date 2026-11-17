@@ -1,5 +1,10 @@
 //! The vault: key header, master password rules, the locked/unlocked
-//! session and the password entries.
+//! session, the password entries, the encrypted files and the backups.
+//!
+//! This is the layer between the Tauri commands and the `crypto` and
+//! `storage` modules. It decides what is encrypted, with which associated
+//! data, and where it is stored. The helpers defined here are shared by the
+//! submodules.
 
 pub mod backup;
 pub mod entries;
@@ -43,6 +48,8 @@ pub(crate) fn now_millis() -> i64 {
 mod tests {
     use super::*;
 
+    /// Temporary-name suffixes are random, so concurrent operations in one
+    /// folder do not collide.
     #[test]
     fn suffixes_are_16_hex_digits_and_differ() {
         let first = random_suffix().unwrap();

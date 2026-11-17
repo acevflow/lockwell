@@ -23,15 +23,23 @@ use crate::crypto::keys::{KEY_LEN, SecretKey};
 use crate::crypto::random::random_array;
 use crate::error::{AppError, AppResult};
 
+/// Magic bytes that identify a vault key header.
 const MAGIC: &[u8; 4] = b"LWVH";
 /// Version of the header format.
 pub const FORMAT_VERSION: u32 = 1;
+/// Length of the clear part: magic, version, the three Argon2id parameters
+/// (3 x 4 bytes) and the salt. It is also the associated data of the wrapped key.
 const PARAMS_LEN: usize = 4 + 4 + 12 + SALT_LEN;
+/// Length of the wrapped key: the encrypted key plus nonce and tag.
 const WRAPPED_LEN: usize = KEY_LEN + OVERHEAD;
 /// Total length of an encoded header.
 pub const HEADER_LEN: usize = PARAMS_LEN + WRAPPED_LEN;
 
 /// The decoded key header of a vault.
+///
+/// It holds no secret by itself: the wrapped key is only useful together with
+/// the master password. Decoding validates the shape; only
+/// [`VaultHeader::unwrap_key`] proves the password and authenticity.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VaultHeader {
     kdf: KdfParams,
@@ -52,6 +60,9 @@ impl VaultHeader {
 
     /// Wraps an existing vault key with `password`, using a fresh salt.
     ///
+    /// Used to change the master password: the vault key stays the same, so no
+    /// record or file has to be re-encrypted.
+    ///
     /// # Errors
     /// Fails if randomness, key derivation or encryption fails.
     pub fn wrap(vault_key: &SecretKey, password: &[u8], kdf: KdfParams) -> AppResult<VaultHeader> {
@@ -67,6 +78,10 @@ impl VaultHeader {
     }
 
     /// Recovers the vault key with `password`.
+    ///
+    /// Key derivation is slow on purpose (see [`kdf::derive_key`]). A wrong
+    /// password and a modified header give the same error, so the result does
+    /// not reveal which one happened.
     ///
     /// # Errors
     /// - [`AppError::WrongPasswordOrCorrupt`] if the password is wrong or the
@@ -121,6 +136,7 @@ impl VaultHeader {
     }
 }
 
+/// Encodes the clear part of the header (everything before the wrapped key).
 fn encode_params(kdf: &KdfParams, salt: &[u8; SALT_LEN]) -> Vec<u8> {
     let mut bytes = Vec::with_capacity(HEADER_LEN);
     bytes.extend_from_slice(MAGIC);
@@ -132,6 +148,8 @@ fn encode_params(kdf: &KdfParams, salt: &[u8; SALT_LEN]) -> Vec<u8> {
     bytes
 }
 
+/// Reads a little-endian `u32` at `offset`. The callers have already checked
+/// that `bytes` is long enough.
 fn read_u32(bytes: &[u8], offset: usize) -> u32 {
     let mut word = [0u8; 4];
     word.copy_from_slice(&bytes[offset..offset + 4]);
@@ -192,6 +210,8 @@ pub(crate) mod tests {
         );
     }
 
+    /// The clear part is authenticated as associated data, so changing it
+    /// makes the password check fail.
     #[test]
     fn tampering_with_params_or_salt_is_detected() {
         let (header, _) = VaultHeader::create(b"pw", FAST_KDF).unwrap();
@@ -269,6 +289,7 @@ pub(crate) mod tests {
         );
     }
 
+    /// Decoding refuses oversized Argon2id parameters before any derivation runs.
     #[test]
     fn out_of_range_kdf_params_are_rejected_before_use() {
         let (header, _) = VaultHeader::create(b"pw", FAST_KDF).unwrap();

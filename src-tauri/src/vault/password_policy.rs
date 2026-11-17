@@ -1,4 +1,7 @@
 //! Rules for the master password.
+//!
+//! The checks run when a vault is created and when the master password is
+//! changed, never on unlock, so a vault made under older rules still opens.
 
 use crate::error::{AppError, AppResult};
 
