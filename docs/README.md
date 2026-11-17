@@ -17,7 +17,7 @@ For the project overview, status and license, see the
 | [Reference](reference.md) | The 18 commands, event, data types, error codes, limits and on-disk formats. | Contributors, reviewers |
 | [Security](security.md) | Threat model, protections, assumptions, limits and how to report a vulnerability. | Users, reviewers |
 | [Manual testing guide](manual-testing.md) | 129 manual test cases, a smoke test and a traceability table. | Testers |
-| [Code file index](files/README.md) | One document per code file. | Contributors |
+| [Code file index](files/README.md) | One complete document per source code file (63 files): purpose, public API, internal structure, examples, edge cases, security notes and related tests. | Contributors, reviewers |
 
 ## Related files in the repository root
 

@@ -19,6 +19,16 @@ and this project adheres to
   restore, persistence, security, interface, platforms and uninstallation), a
   smoke test, a results template, how to report defects and a traceability
   table to the automated tests. Linked from the README.
+- `docs/files/`: a complete document for each of the 63 source code files, with
+  its purpose, public API, internal structure (with diagrams where the flow is
+  complex), dependencies, verified usage examples, edge cases, security notes
+  and links to its tests, plus an index grouped by folder.
+
+### Changed
+
+- `docs/files/` now covers source code only. The short documents for tests,
+  test support code and configuration files were removed, and each document
+  links to the tests of its file.
 
 ### Fixed
 
