@@ -10,6 +10,10 @@ and this project adheres to
 
 ### Added
 
+- Project documentation in `docs/`: an index, getting started, user guide,
+  architecture, development guide, reference (commands, error codes, data and
+  file formats) and a security document with the threat model. Linked from the
+  README.
 - `docs/manual-testing.md`: manual testing guide with 129 test cases
   (installation, vault, entries, files, master password change, backup and
   restore, persistence, security, interface, platforms and uninstallation), a

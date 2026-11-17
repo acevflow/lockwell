@@ -20,7 +20,8 @@ macOS and Linux will follow.
 - **100% local.** No network connections, no accounts, no telemetry.
 - **Strong, standard cryptography.** Vault data is encrypted with
   XChaCha20-Poly1305, and the encryption key is derived from the master
-  password with Argon2id. Only standard, audited libraries are used.
+  password with Argon2id. Only established, published Rust crypto libraries
+  are used; there is no custom cryptography.
 - **Encrypted password storage.** Entries (title, username, password, website
   and notes) are stored in a local SQLite database where every record is
   encrypted individually. Search the list, and reveal or copy a password only
@@ -74,8 +75,9 @@ See the [changelog](CHANGELOG.md) for what has changed so far.
 
 - [Git](https://git-scm.com/).
 - The [Rust](https://www.rust-lang.org/tools/install) toolchain, installed with
-  `rustup`.
-- [Node.js](https://nodejs.org/) with npm.
+  `rustup`. The crate uses Rust edition 2024 (verified with Rust 1.99).
+- [Node.js](https://nodejs.org/) with npm (CI uses Node 26; verified with
+  Node 26.13 and npm 11).
 - The system dependencies listed in the official
   [Tauri prerequisites guide](https://v2.tauri.app/start/prerequisites/) for
   your operating system.
@@ -89,7 +91,8 @@ cd lockwell
 
 ### Common commands
 
-Run these from the repository root:
+Run these from the repository root. The [development guide](docs/development.md)
+has the full list, including how to run a subset of the tests.
 
 | Task                         | Command                 |
 | ---------------------------- | ----------------------- |
@@ -103,8 +106,25 @@ Run these from the repository root:
 | Format the code              | `npm run format`        |
 | Type check                   | `npm run typecheck`     |
 
-See the [contributing guide](CONTRIBUTING.md) for more details. To test the
-app by hand, follow the [manual testing guide](docs/manual-testing.md).
+The first run of `npm run tauri dev` compiles the Rust core first. With no
+vault, the app shows the setup screen; see
+[Getting started](docs/getting-started.md#first-use) for the first session and
+the [user guide](docs/user-guide.md) for every feature.
+
+See the [contributing guide](CONTRIBUTING.md) for the contribution process. To
+test the app by hand, follow the [manual testing guide](docs/manual-testing.md).
+
+## Documentation
+
+The [documentation index](docs/README.md) lists every document:
+
+- [Getting started](docs/getting-started.md): installation, configuration and
+  first use.
+- [User guide](docs/user-guide.md): how to use each feature.
+- [Architecture](docs/architecture.md) and [reference](docs/reference.md): how
+  it works, commands, errors and file formats.
+- [Development guide](docs/development.md): build, test and extend.
+- [Security](docs/security.md): threat model and limits.
 
 ## Project structure
 
@@ -118,9 +138,15 @@ lockwell/
 │   ├── icons/        # Application icons
 │   └── tauri.conf.json
 ├── src/              # TypeScript and React interface
-│   └── test/         # Test setup
-├── docs/             # Project documentation
-│   └── files/        # One document per code file, with an index (README.md)
+│   ├── api/          # Typed wrappers for the core commands
+│   ├── screens/      # Setup, unlock and vault screens
+│   ├── components/   # Reusable interface pieces
+│   ├── hooks/        # React hooks
+│   ├── e2e/          # End-to-end flows against a fake core
+│   └── test/         # Test setup and test doubles
+├── docs/             # Project documentation (start at docs/README.md)
+│   ├── files/        # One document per code file, with an index (README.md)
+│   └── manual-testing.md
 ├── .github/          # CI workflows and security configuration
 ├── index.html        # Interface entry page
 ├── package.json      # npm scripts and dependencies
