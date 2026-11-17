@@ -38,6 +38,14 @@ macOS and Linux will follow.
 - **Master password** of at least 12 characters, which can be changed. There is
   no recovery mechanism: if you forget it, your data cannot be recovered.
 
+## Download
+
+Windows installers (MSI and NSIS) and their SHA-256 checksums are on the
+[releases page](https://github.com/acevflow/lockwell/releases/latest). The
+installers are not code-signed, so Windows SmartScreen may warn you. Compare
+the SHA-256 of the file you downloaded with `SHA256SUMS.txt` before running it
+(`Get-FileHash <file>` in PowerShell).
+
 ## Project status
 
 lockwell **0.1.0** is the first beta. It has not been audited.

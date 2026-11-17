@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-17
+
+First beta. It has not been audited.
+
 ### Added
 
 - `THIRD-PARTY-LICENSES.md`: licenses of the third-party software in a Linux
@@ -37,38 +41,6 @@ and this project adheres to
   its purpose, public API, internal structure (with diagrams where the flow is
   complex), dependencies, verified usage examples, edge cases, security notes
   and links to its tests, plus an index grouped by folder.
-
-### Changed
-
-- Internal refactoring of the Rust core and the interface (shared helpers for
-  the file and backup commands, the vault and the initial list load; shorter
-  functions; named constants). Behavior is unchanged.
-- `docs/files/` now covers source code only. The short documents for tests,
-  test support code and configuration files were removed, and each document
-  links to the tests of its file.
-
-### Fixed
-
-- A password or username copied just before closing the app stayed on the
-  clipboard, because the 30-second clearing timer ended with the process. The
-  clipboard is now cleared when the app exits (only if it still holds the
-  copied text).
-- When adding several files failed part way, the Files list did not show the
-  files that had already been added until the tab was opened again.
-- File sizes just below a unit boundary were shown as "1000 KB" or "1000 MB"
-  instead of "1 MB" or "1 GB".
-- The vault was locked by the inactivity timer the moment a command that ran
-  longer than 5 minutes (for example, adding a very large file) finished,
-  instead of counting that command as activity.
-- Saving a decrypted copy or a backup failed with "invalid filename" when the
-  destination name was close to the 255-character limit, because the temporary
-  file name was longer than the target's.
-
-## [0.1.0] - 2026-11-16
-
-First beta. It has not been audited.
-
-### Added
 
 - `README.md` with the project overview, planned features, status, tech stack,
   requirements, planned structure and license.
@@ -109,6 +81,32 @@ First beta. It has not been audited.
   `.lwbackup` file encrypted with the vault key, and restore it over the
   current vault or on a new computer. A restore is fully checked before it
   replaces anything.
+
+### Changed
+
+- Internal refactoring of the Rust core and the interface (shared helpers for
+  the file and backup commands, the vault and the initial list load; shorter
+  functions; named constants). Behavior is unchanged.
+- `docs/files/` now covers source code only. The short documents for tests,
+  test support code and configuration files were removed, and each document
+  links to the tests of its file.
+
+### Fixed
+
+- A password or username copied just before closing the app stayed on the
+  clipboard, because the 30-second clearing timer ended with the process. The
+  clipboard is now cleared when the app exits (only if it still holds the
+  copied text).
+- When adding several files failed part way, the Files list did not show the
+  files that had already been added until the tab was opened again.
+- File sizes just below a unit boundary were shown as "1000 KB" or "1000 MB"
+  instead of "1 MB" or "1 GB".
+- The vault was locked by the inactivity timer the moment a command that ran
+  longer than 5 minutes (for example, adding a very large file) finished,
+  instead of counting that command as activity.
+- Saving a decrypted copy or a backup failed with "invalid filename" when the
+  destination name was close to the 255-character limit, because the temporary
+  file name was longer than the target's.
 
 ### Security
 

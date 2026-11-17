@@ -5,7 +5,10 @@ and complete a first session.
 **Audience:** people who want to build and try lockwell. Contributors should
 continue with the [development guide](development.md).
 
-lockwell 0.1.0 has no published installer. You build it from source.
+lockwell 0.1.0 installers for Windows (MSI and NSIS) are on the
+[releases page](https://github.com/acevflow/lockwell/releases/latest), with a
+`SHA256SUMS.txt` file to verify them. They are not code-signed, so Windows
+SmartScreen may warn you. This guide shows how to build it from source.
 
 ## Table of contents
 
