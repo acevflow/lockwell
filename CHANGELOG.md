@@ -18,6 +18,9 @@ and this project adheres to
 
 ### Fixed
 
+- The vault was locked by the inactivity timer the moment a command that ran
+  longer than 5 minutes (for example, adding a very large file) finished,
+  instead of counting that command as activity.
 - Saving a decrypted copy or a backup failed with "invalid filename" when the
   destination name was close to the 255-character limit, because the temporary
   file name was longer than the target's.

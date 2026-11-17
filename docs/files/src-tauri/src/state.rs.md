@@ -9,7 +9,9 @@ each behind its own mutex.
 - `with_vault_blocking()` runs a slow operation (Argon2id, file encryption) on
   a blocking thread so the interface stays responsive.
 - `touch()` records activity; `lock_if_idle()` locks after the inactivity
-  timeout.
+  timeout. It checks inactivity once it holds the vault, and `with_vault()`
+  records the end of an operation before releasing it, so an operation longer
+  than the timeout does not lock the vault the moment it finishes.
 - `lock()` locks the vault and clears a secret this app left on the clipboard.
 - `copy_secret()` and `clear_clipboard_if_unchanged()` drive the clipboard.
 
