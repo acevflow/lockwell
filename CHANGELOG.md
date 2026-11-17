@@ -18,6 +18,8 @@ and this project adheres to
 
 ### Fixed
 
+- File sizes just below a unit boundary were shown as "1000 KB" or "1000 MB"
+  instead of "1 MB" or "1 GB".
 - The vault was locked by the inactivity timer the moment a command that ran
   longer than 5 minutes (for example, adding a very large file) finished,
   instead of counting that command as activity.

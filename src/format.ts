@@ -7,14 +7,17 @@ export function formatBytes(bytes: number): string {
   if (bytes < 1000) {
     return bytes === 1 ? "1 byte" : `${bytes} bytes`;
   }
-  let value = bytes;
+  let value = bytes / 1000;
   let unit = 0;
-  value /= 1000;
-  while (value >= 1000 && unit < UNITS.length - 1) {
+  // Compare the rounded value, so 999.9 KB is shown as "1 MB", not "1000 KB".
+  while (roundForDisplay(value) >= 1000 && unit < UNITS.length - 1) {
     value /= 1000;
     unit += 1;
   }
-  const rounded =
-    value >= 100 ? Math.round(value) : Math.round(value * 10) / 10;
-  return `${rounded} ${UNITS[unit]}`;
+  return `${roundForDisplay(value)} ${UNITS[unit]}`;
+}
+
+/** Whole numbers from 100 up, one decimal below. */
+function roundForDisplay(value: number): number {
+  return value >= 100 ? Math.round(value) : Math.round(value * 10) / 10;
 }

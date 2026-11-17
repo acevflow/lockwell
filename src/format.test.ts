@@ -16,6 +16,14 @@ describe("formatBytes", () => {
     expect(formatBytes(3_000_000_000)).toBe("3 GB");
   });
 
+  it("moves up a unit when rounding reaches 1000", () => {
+    expect(formatBytes(999_499)).toBe("999 KB");
+    expect(formatBytes(999_500)).toBe("1 MB");
+    expect(formatBytes(999_999)).toBe("1 MB");
+    expect(formatBytes(999_999_999)).toBe("1 GB");
+    expect(formatBytes(999_999_999_999)).toBe("1 TB");
+  });
+
   it("stops at terabytes", () => {
     expect(formatBytes(5_000_000_000_000_000)).toBe("5000 TB");
   });
