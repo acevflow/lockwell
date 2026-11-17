@@ -97,7 +97,7 @@ jobs:
       - name: Compute SHA-256 checksums
         working-directory: dist-release
         run: |
-          find . -mindepth 2 -type f -exec mv -- {} . ;
+          find . -mindepth 2 -type f -exec mv -t . -- {} +
           find . -mindepth 1 -type d -empty -delete
           sha256sum -- * | tee SHA256SUMS.txt
 
