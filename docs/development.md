@@ -127,7 +127,9 @@ integration tests and by component tests with individual mocks.
 `.github/workflows/ci.yml` runs on pushes and pull requests to `main`, on
 `windows-latest`. In order: checkout, Node.js, Rust (stable with clippy,
 rustfmt, llvm-tools), Rust cache, `cargo-llvm-cov`, `npm ci`, `format:check`,
-`typecheck`, `lint`, `test:coverage`, upload of the coverage report and
+`licenses:check` (fails if `THIRD-PARTY-LICENSES.md` is out of date after a
+`Cargo.lock` change; fix it with `npm run licenses`), `typecheck`, `lint`,
+`test:coverage`, upload of the coverage report and
 `npm run tauri build`. `.github/workflows/codeql.yml` runs CodeQL for
 JavaScript/TypeScript, Rust and GitHub Actions on pushes, pull requests and
 weekly. Dependabot (`.github/dependabot.yml`) proposes weekly updates for npm,

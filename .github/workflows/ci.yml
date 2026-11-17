@@ -1,5 +1,5 @@
-# Continuous integration: install, format, type check, lint, test with
-# coverage (report uploaded as an artifact) and build.
+# Continuous integration: install, format, third-party licenses, type check,
+# lint, test with coverage (report uploaded as an artifact) and build.
 name: CI
 
 on:
@@ -58,6 +58,11 @@ jobs:
 
       - name: Check formatting
         run: npm run format:check
+
+      # Fails when Cargo.lock changed and THIRD-PARTY-LICENSES.md was not
+      # regenerated with `npm run licenses`.
+      - name: Check the third-party licenses
+        run: npm run licenses:check
 
       - name: Type check
         run: npm run typecheck

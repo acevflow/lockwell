@@ -16,6 +16,7 @@ and this project adheres to
   packages.
 - `npm run licenses` and `npm run licenses:check`: a script that generates
   `THIRD-PARTY-LICENSES.md` from `Cargo.lock` and checks that it is up to date.
+  CI runs the check, so a change to `Cargo.lock` needs `npm run licenses`.
 - Code coverage measurement for the interface (Vitest) and the Rust core
   (`npm run test:coverage`), also run in CI with the report uploaded.
 - Many more automated tests: integration tests for the vault, files, backups
