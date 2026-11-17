@@ -4,6 +4,9 @@
 //! `WTSRegisterSessionNotification` and calls a callback on every
 //! `WTS_SESSION_LOCK` event. It runs on its own thread with its own message
 //! loop for the lifetime of the app.
+//!
+//! The module contains the only `unsafe` code of the crate: calls to the Win32
+//! API. Each `unsafe` block states why it is sound.
 
 use std::sync::OnceLock;
 use std::sync::mpsc;
@@ -56,6 +59,8 @@ pub fn watch(on_lock: impl Fn() + Send + Sync + 'static) -> Result<(), String> {
         .map_err(|_| "the session lock watcher stopped unexpectedly".to_string())?
 }
 
+/// Creates the hidden message-only window and registers it for session
+/// notifications of the current session.
 fn create_notification_window() -> Result<HWND, String> {
     // SAFETY: plain Win32 calls with valid, static arguments; the window
     // class name and procedure live for the whole program.
@@ -92,6 +97,8 @@ fn create_notification_window() -> Result<HWND, String> {
     }
 }
 
+/// Pumps window messages on the current thread until the loop ends. The
+/// watcher thread stays here for the rest of the process.
 fn run_message_loop() {
     let mut message = MSG::default();
     // SAFETY: `message` is a valid MSG owned by this thread; GetMessageW
@@ -103,6 +110,8 @@ fn run_message_loop() {
     }
 }
 
+/// Window procedure of the notification window. It calls the stored callback
+/// on a session lock and leaves every other message to Windows.
 extern "system" fn window_procedure(
     window: HWND,
     message: u32,

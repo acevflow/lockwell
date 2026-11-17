@@ -34,6 +34,9 @@ pub fn copy_entry_field(
     copy_field(&state, &id, field)
 }
 
+/// Reads the field from the vault, copies it and schedules the clipboard
+/// clearing. The value is never returned to the interface. Fails with
+/// `invalid_input` if the field is empty.
 fn copy_field(state: &AppState, id: &str, field: EntryField) -> AppResult<()> {
     let entry = state.with_vault(|vault| vault.unlocked()?.get_entry(id))?;
     let value = match field {

@@ -18,6 +18,9 @@ pub fn vault_status(state: State<'_, AppState>) -> AppResult<VaultStatus> {
 }
 
 /// Creates a new vault protected by `password` and unlocks it.
+///
+/// Errors: `invalid_input` if the password breaks the policy, `vault_exists`
+/// if a vault is already there.
 #[tauri::command]
 pub async fn create_vault(state: State<'_, AppState>, password: String) -> AppResult<()> {
     let password = Zeroizing::new(password);
@@ -27,6 +30,10 @@ pub async fn create_vault(state: State<'_, AppState>, password: String) -> AppRe
 }
 
 /// Unlocks the vault with `password`.
+///
+/// Errors: `wrong_password` if the password is wrong or the vault key data is
+/// damaged, `vault_not_found`, `corrupt` or `unsupported_version` if the vault
+/// cannot be read.
 #[tauri::command]
 pub async fn unlock_vault(state: State<'_, AppState>, password: String) -> AppResult<()> {
     let password = Zeroizing::new(password);
@@ -42,7 +49,11 @@ pub fn lock_vault(state: State<'_, AppState>) {
     state.lock();
 }
 
-/// Replaces the master password after checking the current one.
+/// Replaces the master password after checking the current one. The vault
+/// must be unlocked, and the data is not re-encrypted.
+///
+/// Errors: `locked`, `wrong_password` or `invalid_input` (policy, or the new
+/// password equals the current one).
 #[tauri::command]
 pub async fn change_master_password(
     state: State<'_, AppState>,

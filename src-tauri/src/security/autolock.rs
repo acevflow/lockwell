@@ -1,4 +1,8 @@
 //! Inactivity tracking for the automatic lock.
+//!
+//! This module only keeps the clock logic. [`super::spawn_idle_watcher`]
+//! checks it on a timer, and [`crate::state::AppState`] updates it on every
+//! command and on the explicit activity reports from the interface.
 
 use std::time::{Duration, Instant};
 

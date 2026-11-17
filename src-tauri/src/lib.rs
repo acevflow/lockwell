@@ -1,4 +1,12 @@
 //! Application entry point shared by the desktop binary.
+//!
+//! Layers, from the inside out:
+//!
+//! - [`crypto`]: wrappers around audited cryptographic crates.
+//! - [`storage`]: the SQLite database that holds encrypted records.
+//! - [`vault`]: the vault session, entries, files and backups.
+//! - [`state`] and [`security`]: shared state, automatic lock and clipboard.
+//! - [`commands`]: the only functions the interface can call.
 
 pub mod commands;
 pub mod crypto;
@@ -17,6 +25,13 @@ use crate::vault::Vault;
 const VAULT_DIR: &str = "vault";
 
 /// Builds and runs the Tauri application.
+///
+/// Setup creates the [`AppState`] over the vault folder in the app data
+/// directory, starts the inactivity watcher and, on Windows, the session-lock
+/// watcher.
+///
+/// # Panics
+/// Panics if Tauri fails to start or run, which ends the process.
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()

@@ -1,4 +1,7 @@
 //! Commands to list, read, create, update and delete password entries.
+//!
+//! All of them need an unlocked vault and fail with `locked` otherwise. Only
+//! `get_entry` returns the password and the notes to the interface.
 
 use tauri::State;
 

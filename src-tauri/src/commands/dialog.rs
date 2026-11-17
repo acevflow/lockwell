@@ -1,4 +1,7 @@
 //! Helpers shared by the commands that show native dialogs.
+//!
+//! Blocking dialogs must not run on the async runtime threads, and their
+//! result is a [`FilePath`] that may not be a local path.
 
 use std::path::PathBuf;
 

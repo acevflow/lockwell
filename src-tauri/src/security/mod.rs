@@ -30,6 +30,7 @@ pub enum LockReason {
     SystemLock,
 }
 
+/// Payload of [`VAULT_LOCKED_EVENT`].
 #[derive(Clone, Serialize)]
 struct VaultLockedPayload {
     reason: LockReason,
@@ -45,6 +46,9 @@ pub fn notify_locked<R: Runtime>(app: &AppHandle<R>, reason: LockReason) {
 }
 
 /// Starts the thread that locks the vault after the inactivity timeout.
+///
+/// The thread wakes every [`autolock::CHECK_INTERVAL`] and runs for the life
+/// of the process, so the lock can be up to that interval late.
 ///
 /// # Errors
 /// Returns an error if the thread cannot be started.
@@ -62,7 +66,8 @@ pub fn spawn_idle_watcher<R: Runtime>(app: AppHandle<R>) -> std::io::Result<()> 
         .map(|_| ())
 }
 
-/// Locks the vault whenever Windows locks the session.
+/// Locks the vault whenever Windows locks the session (Win+L, lock screen
+/// or user switch). The interface is notified only if the vault was unlocked.
 ///
 /// # Errors
 /// Returns a description of the failure if the watcher cannot start.
@@ -94,6 +99,7 @@ pub fn schedule_clipboard_clear(state: AppState, generation: u64) -> std::io::Re
 mod tests {
     use super::*;
 
+    /// The event payload has the shape the interface listens for.
     #[test]
     fn lock_reasons_serialize_for_the_interface() {
         let payload = VaultLockedPayload {
