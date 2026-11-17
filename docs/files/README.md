@@ -61,6 +61,7 @@ how it fits in the project.
 | [`components/EntryList.tsx`](src/components/EntryList.tsx.md)                 | List of entries.                         |
 | [`components/EntryForm.tsx`](src/components/EntryForm.tsx.md)                 | Create or edit an entry.                 |
 | [`components/EntryView.tsx`](src/components/EntryView.tsx.md)                 | Read-only entry with masked password.    |
+| [`components/FileTable.tsx`](src/components/FileTable.tsx.md)                 | Table of stored files.                   |
 | [`components/entries.test.tsx`](src/components/entries.test.tsx.md)           | Tests for the entry components.          |
 | [`components/components.test.tsx`](src/components/components.test.tsx.md)     | Tests for the small components.          |
 | [`components/CreateBackupPanel.tsx`](src/components/CreateBackupPanel.tsx.md) | Create an encrypted backup.              |

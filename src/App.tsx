@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { errorMessage } from "./api/client";
 import type { LockReason } from "./api/security";
+import type { VaultStatus } from "./api/types";
 import { getVaultStatus, lockVault } from "./api/vault";
 import SetupScreen from "./screens/SetupScreen";
 import UnlockScreen from "./screens/UnlockScreen";
@@ -21,6 +22,12 @@ const LOCK_NOTICES: Record<LockReason, string> = {
 const RESTORED_NOTICE =
   "Backup restored. Unlock it with the master password it had when the backup was made.";
 
+/** The screen to show for the vault status the core reports. */
+function phaseFor(status: VaultStatus): Phase {
+  if (!status.exists) return { kind: "setup" };
+  return status.unlocked ? { kind: "unlocked" } : { kind: "locked" };
+}
+
 /**
  * Root component of the interface. It asks the core for the vault status
  * and shows the setup, unlock or vault screen.
@@ -30,15 +37,7 @@ function App() {
 
   useEffect(() => {
     getVaultStatus()
-      .then((status) =>
-        setPhase(
-          !status.exists
-            ? { kind: "setup" }
-            : status.unlocked
-              ? { kind: "unlocked" }
-              : { kind: "locked" },
-        ),
-      )
+      .then((status) => setPhase(phaseFor(status)))
       .catch((error: unknown) =>
         setPhase({ kind: "failed", message: errorMessage(error) }),
       );

@@ -1,7 +1,7 @@
 # src/App.tsx
 
 Root component of the interface. On start it asks the core for the vault
-status (`vault_status`) and shows one of:
+status (`vault_status`, mapped to a screen by `phaseFor`) and shows one of:
 
 - `SetupScreen` when no vault exists,
 - `UnlockScreen` when the vault is locked,

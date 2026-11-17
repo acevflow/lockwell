@@ -3,7 +3,7 @@ import { deleteFile, exportFile, importFiles, listFiles } from "../api/files";
 import type { FileSummary } from "../api/types";
 import ConfirmDialog from "../components/ConfirmDialog";
 import ErrorBanner from "../components/ErrorBanner";
-import { formatBytes } from "../format";
+import FileTable from "../components/FileTable";
 import { useApiError } from "../hooks/useApiError";
 import { useInitialLoad } from "../hooks/useInitialLoad";
 
@@ -101,47 +101,12 @@ function FilesTab({ onLocked }: FilesTabProps) {
       ) : files.length === 0 ? (
         <p className="muted">No files yet. Add your first one.</p>
       ) : (
-        <table className="file-table">
-          <thead>
-            <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Size</th>
-              <th scope="col">Added</th>
-              <th scope="col">
-                <span className="visually-hidden">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {files.map((file) => (
-              <tr key={file.id}>
-                <td className="file-name">{file.name}</td>
-                <td>{formatBytes(file.size)}</td>
-                <td>{new Date(file.createdAt).toLocaleDateString()}</td>
-                <td className="row-actions">
-                  <button
-                    type="button"
-                    className="secondary small"
-                    onClick={() => saveCopy(file)}
-                    disabled={busy !== null}
-                    aria-label={`Save a copy of ${file.name}`}
-                  >
-                    Save a copy
-                  </button>
-                  <button
-                    type="button"
-                    className="danger small"
-                    onClick={() => setToDelete(file)}
-                    disabled={busy !== null}
-                    aria-label={`Delete ${file.name}`}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <FileTable
+          files={files}
+          disabled={busy !== null}
+          onSaveCopy={saveCopy}
+          onDelete={setToDelete}
+        />
       )}
       {toDelete && (
         <ConfirmDialog
