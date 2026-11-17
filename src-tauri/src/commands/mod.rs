@@ -4,6 +4,7 @@
 //! delegate to the vault.
 
 pub mod backup;
+mod dialog;
 pub mod entries;
 pub mod files;
 pub mod security;

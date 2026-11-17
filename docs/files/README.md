@@ -102,6 +102,7 @@ how it fits in the project.
 | File                                                            | Description                                    |
 | --------------------------------------------------------------- | ---------------------------------------------- |
 | [`commands/mod.rs`](src-tauri/src/commands/mod.rs.md)           | Module entry point.                            |
+| [`commands/dialog.rs`](src-tauri/src/commands/dialog.rs.md)     | Helpers shared by the dialog commands.         |
 | [`commands/vault.rs`](src-tauri/src/commands/vault.rs.md)       | Create, unlock, lock, change master password.  |
 | [`commands/entries.rs`](src-tauri/src/commands/entries.rs.md)   | List, read, create, update and delete entries. |
 | [`commands/files.rs`](src-tauri/src/commands/files.rs.md)       | File commands with native dialogs.             |
