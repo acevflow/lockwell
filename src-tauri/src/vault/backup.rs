@@ -48,6 +48,8 @@ const BACKUP_MAGIC: &[u8; 4] = b"LWBK";
 pub const BACKUP_FORMAT_VERSION: u32 = 1;
 const PREFIX_LEN: usize = 8 + HEADER_LEN;
 const CONTAINER_MAGIC: &[u8; 4] = b"LWBC";
+/// Name of the decrypted container while a backup is being restored.
+const CONTENTS_TEMP_FILE: &str = "contents.tmp";
 const KIND_END: u8 = 0;
 const KIND_DATABASE: u8 = 1;
 const KIND_BLOB: u8 = 2;
@@ -190,7 +192,7 @@ fn stage_backup(
     key: &SecretKey,
 ) -> AppResult<()> {
     fs::create_dir_all(staging.join(FILES_DIR))?;
-    let contents_path = staging.join("contents.tmp");
+    let contents_path = staging.join(CONTENTS_TEMP_FILE);
     {
         let mut contents = BufWriter::new(
             OpenOptions::new()

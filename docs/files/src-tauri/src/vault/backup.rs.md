@@ -43,3 +43,6 @@ staged vault (header, rows, missing or foreign blobs) and the reader that joins
 the container parts.
 
 `unpack_contents` reads each record with `read_name` and `copy_record_data`.
+
+While restoring, the decrypted container lives in `contents.tmp`
+(`CONTENTS_TEMP_FILE`) inside the staging folder and is removed after unpacking.

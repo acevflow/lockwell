@@ -80,11 +80,6 @@ impl VaultHeader {
         Ok(SecretKey::from_slice(&key_bytes)?)
     }
 
-    /// The Argon2id parameters of this header.
-    pub fn kdf(&self) -> KdfParams {
-        self.kdf
-    }
-
     /// Encodes the header in its binary layout.
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = encode_params(&self.kdf, &self.salt);

@@ -11,7 +11,7 @@ chunks are detected.
 
 - `encrypt(key, aad, reader, writer)` and `decrypt(...)` work on any
   `Read`/`Write` and return the number of plaintext bytes.
-- `encrypted_len()` gives the encrypted size for a plaintext size.
+- `encrypted_len()` gives the encrypted size for a plaintext size (compiled only for the tests, which check the layout with it).
 
 Decryption writes plaintext as it goes, so callers write to a temporary
 destination and discard it on error. Chunk buffers are wiped on drop and are
