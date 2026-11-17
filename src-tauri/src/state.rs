@@ -1,4 +1,8 @@
 //! Application state shared by the Tauri commands and background watchers.
+//!
+//! Every way of locking the vault (the command, the inactivity timer and the
+//! Windows session lock) goes through [`AppState`], so the clipboard is
+//! cleared and the vault is wiped in one place.
 
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::Instant;
@@ -111,7 +115,8 @@ impl AppState {
         was_unlocked
     }
 
-    /// Copies a secret to the clipboard and returns its generation.
+    /// Copies a secret to the clipboard and returns its generation, which the
+    /// clearing timer later passes to [`AppState::clear_clipboard_if_unchanged`].
     ///
     /// # Errors
     /// Returns [`AppError::Io`] if the clipboard cannot be written.
@@ -119,7 +124,8 @@ impl AppState {
         lock(&self.clipboard).copy(text)
     }
 
-    /// Clears the copy `generation` if the clipboard still holds it.
+    /// Clears the copy `generation` if the clipboard still holds it. Returns
+    /// whether the clipboard was cleared.
     pub fn clear_clipboard_if_unchanged(&self, generation: u64) -> bool {
         lock(&self.clipboard).clear_if_unchanged(Some(generation))
     }

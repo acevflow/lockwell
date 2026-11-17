@@ -21,6 +21,10 @@ pub fn list_files(state: State<'_, AppState>) -> AppResult<Vec<FileSummary>> {
 
 /// Asks the user for files and encrypts them into the vault. Returns the
 /// added files; an empty list means the user cancelled.
+///
+/// Files are added one by one and the first failure stops the rest: files
+/// added before it stay in the vault, but the error is returned instead of the
+/// list.
 #[tauri::command]
 pub async fn import_files<R: Runtime>(
     app: AppHandle<R>,
@@ -66,7 +70,8 @@ fn import_error(path: &Path, error: &AppError) -> AppError {
 }
 
 /// Asks the user where to save a decrypted copy of a file and writes it.
-/// Returns `false` if the user cancelled.
+/// Returns `false` if the user cancelled. The copy is plaintext on disk, so it
+/// leaves the protection of the vault.
 #[tauri::command]
 pub async fn export_file<R: Runtime>(
     app: AppHandle<R>,
@@ -115,6 +120,8 @@ mod tests {
         assert!(message.contains("only regular files can be added"));
     }
 
+    /// A path with no file name (such as `..`) gives an empty name instead of
+    /// failing.
     #[test]
     fn import_errors_cope_with_a_path_without_a_name() {
         let reason = AppError::invalid("the path has no file name");

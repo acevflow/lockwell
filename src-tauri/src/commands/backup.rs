@@ -74,6 +74,7 @@ pub async fn restore_backup<R: Runtime>(
     Ok(true)
 }
 
+/// Milliseconds in a day, to turn a timestamp into a day number.
 const MILLIS_PER_DAY: i64 = 86_400_000;
 
 /// Default backup file name for the date of `millis`, such as

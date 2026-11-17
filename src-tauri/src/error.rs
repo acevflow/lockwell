@@ -10,6 +10,9 @@ use thiserror::Error;
 use crate::crypto::CryptoError;
 
 /// Errors of the vault and its commands.
+///
+/// Variants carry only text that is safe to show: validation messages,
+/// error kinds and fixed descriptions, never secrets or decrypted data.
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum AppError {
     /// The master password is wrong, or the vault key data is corrupted.
@@ -72,6 +75,8 @@ impl AppError {
     }
 }
 
+/// Serializes to `{ "code": ..., "message": ... }`, the shape the interface
+/// expects from a failed command (see `src/api/client.ts`).
 impl Serialize for AppError {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut state = serializer.serialize_struct("AppError", 2)?;
@@ -81,6 +86,10 @@ impl Serialize for AppError {
     }
 }
 
+/// Authentication failures and truncation become [`AppError::Corrupt`], I/O
+/// errors stay I/O, and the rest becomes [`AppError::Crypto`]. Callers that
+/// know a decryption failure means a wrong password map it themselves (see
+/// [`AppError::WrongPasswordOrCorrupt`]).
 impl From<CryptoError> for AppError {
     fn from(error: CryptoError) -> Self {
         match error {
@@ -100,6 +109,7 @@ impl From<rusqlite::Error> for AppError {
     }
 }
 
+/// Keeps only the error kind: the original message may include file paths.
 impl From<std::io::Error> for AppError {
     fn from(error: std::io::Error) -> Self {
         AppError::Io(error.kind().to_string())

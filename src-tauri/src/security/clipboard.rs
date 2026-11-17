@@ -7,6 +7,9 @@
 //!
 //! On Windows the text is excluded from the clipboard history (Win+V) and
 //! from cloud clipboard sync.
+//!
+//! Limits: other programs can read the clipboard while the secret is on it,
+//! and only text copied by this app is cleared.
 
 use std::time::Duration;
 
@@ -18,7 +21,8 @@ use crate::error::{AppError, AppResult};
 /// Time after which a copied secret is cleared from the clipboard.
 pub const CLEAR_AFTER: Duration = Duration::from_secs(30);
 
-/// Access to a text clipboard.
+/// Access to a text clipboard. It exists so the logic of [`SecureClipboard`]
+/// is tested with an in-memory clipboard instead of the real one.
 pub trait ClipboardBackend: Send {
     /// Puts `text` on the clipboard.
     fn set_text(&mut self, text: &str) -> Result<(), String>;
@@ -52,6 +56,7 @@ impl ClipboardBackend for SystemClipboard {
     }
 }
 
+/// Opens a handle to the system clipboard; each operation opens its own.
 fn open() -> Result<arboard::Clipboard, String> {
     arboard::Clipboard::new().map_err(|error| error.to_string())
 }
@@ -63,6 +68,9 @@ struct Copied {
 }
 
 /// Clipboard that remembers the secret it copied, to clear it later.
+///
+/// Only the SHA-256 digest of the copied text and a generation counter are
+/// kept, never the text itself.
 pub struct SecureClipboard {
     backend: Box<dyn ClipboardBackend>,
     copied: Option<Copied>,
@@ -120,6 +128,8 @@ impl SecureClipboard {
     }
 }
 
+/// SHA-256 digest of `text`, used only to tell whether the clipboard still
+/// holds what this app copied.
 fn digest(text: &str) -> [u8; 32] {
     Sha256::digest(text.as_bytes()).into()
 }
