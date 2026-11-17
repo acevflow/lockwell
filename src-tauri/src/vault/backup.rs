@@ -221,10 +221,7 @@ fn unpack_contents(reader: &mut impl Read, staging: &Path) -> AppResult<()> {
         if kind == KIND_END {
             break;
         }
-        let name_len = usize::from(read_u16(reader)?);
-        let mut name_bytes = vec![0u8; name_len];
-        read_exact(reader, &mut name_bytes)?;
-        let name = String::from_utf8(name_bytes).map_err(|_| corrupt("invalid name"))?;
+        let name = read_name(reader)?;
         let target = match kind {
             KIND_DATABASE if name == DATABASE_FILE && !has_database => {
                 has_database = true;
@@ -235,17 +232,7 @@ fn unpack_contents(reader: &mut impl Read, staging: &Path) -> AppResult<()> {
             }
             _ => return Err(corrupt("unexpected record")),
         };
-        let len = read_u64(reader)?;
-        let mut file = BufWriter::new(
-            OpenOptions::new()
-                .write(true)
-                .create_new(true)
-                .open(target)?,
-        );
-        if io::copy(&mut reader.take(len), &mut file)? != len {
-            return Err(corrupt("the backup is truncated"));
-        }
-        file.flush()?;
+        copy_record_data(reader, &target)?;
     }
     let mut rest = [0u8; 1];
     if reader.read(&mut rest)? != 0 {
@@ -254,6 +241,30 @@ fn unpack_contents(reader: &mut impl Read, staging: &Path) -> AppResult<()> {
     if !has_database {
         return Err(corrupt("the database is missing"));
     }
+    Ok(())
+}
+
+/// Reads the length-prefixed name of a record.
+fn read_name(reader: &mut impl Read) -> AppResult<String> {
+    let name_len = usize::from(read_u16(reader)?);
+    let mut name_bytes = vec![0u8; name_len];
+    read_exact(reader, &mut name_bytes)?;
+    String::from_utf8(name_bytes).map_err(|_| corrupt("invalid name"))
+}
+
+/// Reads the length-prefixed data of a record into a new file at `target`.
+fn copy_record_data(reader: &mut impl Read, target: &Path) -> AppResult<()> {
+    let len = read_u64(reader)?;
+    let mut file = BufWriter::new(
+        OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(target)?,
+    );
+    if io::copy(&mut reader.take(len), &mut file)? != len {
+        return Err(corrupt("the backup is truncated"));
+    }
+    file.flush()?;
     Ok(())
 }
 

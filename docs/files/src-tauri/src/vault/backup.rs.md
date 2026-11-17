@@ -41,3 +41,5 @@ encrypted, a missing blob, folders and missing paths as backups, a vault folder
 without a parent, every error of the container parser, every check of the
 staged vault (header, rows, missing or foreign blobs) and the reader that joins
 the container parts.
+
+`unpack_contents` reads each record with `read_name` and `copy_record_data`.

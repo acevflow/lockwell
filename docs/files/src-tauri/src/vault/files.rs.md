@@ -19,7 +19,7 @@ disk.
 - `list_files()` (sorted by name) and `get_file()`.
 - `import_file(source)` encrypts a regular file. Its name must be valid
   Unicode, at most 255 characters, with no control characters or slashes.
-- `export_file(id, destination, overwrite)` decrypts to a temporary file next
+- `export_file(id, destination, overwrite)` (with `open_blob` and `check_blob_magic`) decrypts to a temporary file next
   to the destination and renames it only after the whole content has been
   authenticated; a damaged blob leaves nothing behind. Without `overwrite`, an
   existing destination is refused.

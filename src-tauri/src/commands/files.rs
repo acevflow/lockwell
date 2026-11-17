@@ -3,6 +3,8 @@
 //! The native open and save dialogs are shown from the core, so the
 //! interface never handles file system paths.
 
+use std::path::Path;
+
 use tauri::{AppHandle, Runtime, State};
 use tauri_plugin_dialog::DialogExt;
 
@@ -45,17 +47,22 @@ pub async fn import_files<R: Runtime>(
             paths
                 .iter()
                 .map(|path| {
-                    unlocked.import_file(path).map_err(|error| {
-                        let name = path
-                            .file_name()
-                            .map(|name| name.to_string_lossy().into_owned())
-                            .unwrap_or_default();
-                        AppError::invalid(format!("could not add “{name}”: {error}"))
-                    })
+                    unlocked
+                        .import_file(path)
+                        .map_err(|error| import_error(path, &error))
                 })
                 .collect()
         })
         .await
+}
+
+/// The error shown when `path` could not be added, naming the file.
+fn import_error(path: &Path, error: &AppError) -> AppError {
+    let name = path
+        .file_name()
+        .map(|name| name.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    AppError::invalid(format!("could not add “{name}”: {error}"))
 }
 
 /// Asks the user where to save a decrypted copy of a file and writes it.
@@ -94,4 +101,24 @@ pub async fn export_file<R: Runtime>(
 #[tauri::command]
 pub fn delete_file(state: State<'_, AppState>, id: String) -> AppResult<()> {
     state.with_vault(|vault| vault.unlocked()?.delete_file(&id))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn import_errors_name_the_file_and_keep_the_reason() {
+        let reason = AppError::invalid("only regular files can be added");
+        let message = import_error(Path::new("some/folder/report.txt"), &reason).to_string();
+        assert!(message.starts_with("could not add “report.txt”: "));
+        assert!(message.contains("only regular files can be added"));
+    }
+
+    #[test]
+    fn import_errors_cope_with_a_path_without_a_name() {
+        let reason = AppError::invalid("the path has no file name");
+        let message = import_error(Path::new(".."), &reason).to_string();
+        assert!(message.starts_with("could not add “”: "));
+    }
 }
