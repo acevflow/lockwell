@@ -1,6 +1,6 @@
 # Code file index
 
-One document per source code file: 63 files in total. Each document follows the same
+One document per source code file: 64 files in total. Each document follows the same
 template: purpose, place in the architecture, public API, internal structure,
 dependencies, a usage example, edge cases, security notes, and related files and tests.
 
@@ -8,7 +8,7 @@ The path of a document mirrors the path of the file and adds `.md`. For example,
 `src-tauri/src/crypto/aead.rs` is described in
 [`src-tauri/src/crypto/aead.rs.md`](src-tauri/src/crypto/aead.rs.md).
 
-**Scope.** The index covers source code and the build script. Tests, test support code,
+**Scope.** The index covers source code, the build script and the maintenance scripts. Tests, test support code,
 configuration files (`package.json`, `tsconfig*.json`, `vite.config.ts`,
 `eslint.config.js`, `tauri.conf.json`, the capability files), generated files, lock files,
 `index.html`, the stylesheet and the CI workflows have no document of their own. Tests are
@@ -134,3 +134,9 @@ For the overall design, see the [architecture](../architecture.md) and the
 | [`PasswordsTab.tsx`](src/screens/PasswordsTab.tsx.md) | Entry list, search and the view, edit and create panels.      |
 | [`FilesTab.tsx`](src/screens/FilesTab.tsx.md)         | List, add, save a copy of and delete files.                   |
 | [`SettingsTab.tsx`](src/screens/SettingsTab.tsx.md)   | Change the master password, create and restore backups.       |
+
+## Scripts (`scripts/`)
+
+| File                                                                      | Description                                                         |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| [`third-party-licenses.mjs`](scripts/third-party-licenses.mjs.md)         | Generates and checks `THIRD-PARTY-LICENSES.md` from `Cargo.lock`.   |
