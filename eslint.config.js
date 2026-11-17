@@ -1,4 +1,5 @@
-// ESLint flat config for the TypeScript and React interface.
+// ESLint flat config for the TypeScript and React interface. It lints the
+// interface only: the Rust core is linted by clippy (see `npm run lint`).
 import js from "@eslint/js";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";

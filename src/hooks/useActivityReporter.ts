@@ -1,9 +1,11 @@
+/** Hook that tells the core when the user is active, to postpone the auto-lock. */
 import { useEffect } from "react";
 import { touchActivity } from "../api/security";
 
 /** Minimum time between two activity reports, in milliseconds. */
 export const ACTIVITY_REPORT_INTERVAL_MS = 15_000;
 
+/** Window events that count as user activity. */
 const ACTIVITY_EVENTS = [
   "keydown",
   "mousedown",

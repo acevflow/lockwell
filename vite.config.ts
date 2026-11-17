@@ -1,3 +1,7 @@
+/**
+ * Vite and Vitest configuration. Vite serves the interface to Tauri on a fixed
+ * port; Vitest runs the interface tests in jsdom and measures their coverage.
+ */
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 // @ts-expect-error type error without @types/node package

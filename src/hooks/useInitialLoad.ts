@@ -1,3 +1,4 @@
+/** Hook that loads data when a component mounts. */
 import { useEffect } from "react";
 
 /**

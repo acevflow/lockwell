@@ -4,7 +4,9 @@
  * The core remains the authority and checks them again.
  */
 
+/** Minimum length of the master password, in characters. */
 export const MIN_MASTER_PASSWORD_CHARS = 12;
+/** Maximum length of the master password, in characters. */
 export const MAX_MASTER_PASSWORD_CHARS = 1024;
 
 /** Number of Unicode characters, as the core counts them. */

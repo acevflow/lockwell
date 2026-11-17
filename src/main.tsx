@@ -1,3 +1,4 @@
+/** Entry point of the interface: mounts {@link App} in the `#root` element of `index.html`. */
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";

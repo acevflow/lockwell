@@ -10,7 +10,11 @@ export const ENTRY_LIMITS = {
   notes: 20000,
 } as const;
 
-/** Case-insensitive match of `query` on title, username and website. */
+/**
+ * Case-insensitive match of `query` on title, username and website. A blank
+ * query returns `entries` unchanged. Notes and passwords are not searched,
+ * because the list does not hold them.
+ */
 export function filterEntries(
   entries: EntrySummary[],
   query: string,
