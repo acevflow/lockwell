@@ -106,7 +106,8 @@ has the full list, including how to run a subset of the tests.
 | Format the code              | `npm run format`        |
 | Type check                   | `npm run typecheck`     |
 
-The first run of `npm run tauri dev` compiles the Rust core first. With no vault, the app shows the setup screen; see
+The first run of `npm run tauri dev` compiles the Rust core first. With no
+vault, the app shows the setup screen; see
 [Getting started](docs/getting-started.md#first-use) for the first session and
 the [user guide](docs/user-guide.md) for every feature.
 
