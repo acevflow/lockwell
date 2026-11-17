@@ -30,7 +30,7 @@ None. The file only has a side effect: it renders the app.
 
 There is nothing to call. It runs when the page loads, with `npm run dev` (interface only),
 `npm run tauri dev` or a built app. The root element it needs is in
-[`index.html`](../../index.html):
+[`index.html`](../../../index.html):
 
 ```html
 <div id="root"></div>
@@ -54,7 +54,7 @@ can load is set in `tauri.conf.json`, not in this file.
 
 ## Related files and tests
 
-- Related: [`App.tsx`](App.tsx.md), [`index.html`](../../index.html),
+- Related: [`App.tsx`](App.tsx.md), [`index.html`](../../../index.html),
   [`vite-env.d.ts`](vite-env.d.ts.md).
 - Tests: none. The mount is covered by every start of the app, and `App` has its own tests
   in [`App.test.tsx`](../../../src/App.test.tsx).
