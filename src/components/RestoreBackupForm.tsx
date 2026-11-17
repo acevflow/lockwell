@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { restoreBackup } from "../api/backup";
-import { ApiError, errorMessage } from "../api/client";
+import { errorMessage, isWrongPasswordError } from "../api/client";
 import ConfirmDialog from "./ConfirmDialog";
 import ErrorBanner from "./ErrorBanner";
 import PasswordInput from "./PasswordInput";
@@ -51,8 +51,7 @@ function RestoreBackupForm({
       }
     } catch (restoreError) {
       setError(
-        restoreError instanceof ApiError &&
-          restoreError.code === "wrong_password"
+        isWrongPasswordError(restoreError)
           ? "That password does not open this backup."
           : errorMessage(restoreError),
       );
