@@ -2,6 +2,7 @@
 import { call } from "./client";
 import type { FileSummary } from "./types";
 
+/** Lists the stored files (name, size and date only). */
 export function listFiles(): Promise<FileSummary[]> {
   return call<FileSummary[]>("list_files");
 }
@@ -16,6 +17,7 @@ export function exportFile(id: string): Promise<boolean> {
   return call<boolean>("export_file", { id });
 }
 
+/** Deletes a stored file and its encrypted data. */
 export function deleteFile(id: string): Promise<void> {
   return call<void>("delete_file", { id });
 }

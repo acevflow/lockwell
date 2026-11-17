@@ -1,3 +1,8 @@
+/**
+ * Root component and the top-level state machine of the interface: loading,
+ * setup (no vault yet), locked and unlocked. The core is the source of truth;
+ * this file only chooses which screen to show.
+ */
 import { useCallback, useEffect, useState } from "react";
 import { errorMessage } from "./api/client";
 import type { LockReason } from "./api/security";
@@ -7,6 +12,7 @@ import SetupScreen from "./screens/SetupScreen";
 import UnlockScreen from "./screens/UnlockScreen";
 import VaultScreen from "./screens/VaultScreen";
 
+/** Which screen is shown. `notice` explains why the vault is locked. */
 type Phase =
   | { kind: "loading" }
   | { kind: "failed"; message: string }
@@ -14,11 +20,13 @@ type Phase =
   | { kind: "locked"; notice?: string }
   | { kind: "unlocked" };
 
+/** Message shown on the unlock screen for each reason the core can lock. */
 const LOCK_NOTICES: Record<LockReason, string> = {
   idle: "The vault was locked after 5 minutes of inactivity.",
   systemLock: "The vault was locked because Windows was locked.",
 };
 
+/** Message shown after a backup was restored, which leaves the vault locked. */
 const RESTORED_NOTICE =
   "Backup restored. Unlock it with the master password it had when the backup was made.";
 

@@ -1,4 +1,8 @@
-/** Types shared with the Rust core. Field names match its camelCase JSON. */
+/**
+ * Types shared with the Rust core. Field names match its camelCase JSON, so
+ * they must be kept in step with the structs in `src-tauri/src/vault/`
+ * and with `AppError::code` in `src-tauri/src/error.rs`.
+ */
 
 /** Whether a vault exists and whether it is unlocked. */
 export interface VaultStatus {
@@ -44,7 +48,7 @@ export interface FileSummary {
   createdAt: number;
 }
 
-/** Stable error codes returned by the core. */
+/** Stable error codes returned by the core, plus `unknown` for failures that did not come from it. */
 export type ErrorCode =
   | "wrong_password"
   | "locked"

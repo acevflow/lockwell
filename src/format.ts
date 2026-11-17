@@ -1,5 +1,6 @@
 /** Display formatting helpers. */
 
+/** Units above bytes, each 1000 times the previous one. */
 const UNITS = ["KB", "MB", "GB", "TB"] as const;
 
 /** A byte count for people, in decimal units: "512 bytes", "1.5 MB". */
