@@ -4,6 +4,12 @@
 //! open database. Unlocking derives the key from the master password and
 //! keeps it, with the database connection, in an [`UnlockedVault`]. Locking
 //! drops both; the key is wiped from memory when dropped.
+//!
+//! The session does not lock itself: the application state (`state.rs`) calls
+//! [`Vault::lock`] for the lock command, the inactivity timer and the system
+//! session lock. Operations on an unlocked
+//! vault live in the `entries`, `files` and `backup` modules, as methods of
+//! [`UnlockedVault`].
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -22,6 +28,7 @@ use crate::storage::db;
 pub const DATABASE_FILE: &str = "vault.db";
 /// Folder for encrypted files inside the vault folder.
 pub const FILES_DIR: &str = "files";
+/// Key of the `meta` row that stores the encoded key header.
 const HEADER_META_KEY: &str = "header";
 
 /// Whether a vault exists and whether it is unlocked.
@@ -36,6 +43,9 @@ pub struct VaultStatus {
 
 /// State of an unlocked vault: the vault folder, the open database and the
 /// vault key.
+///
+/// The key is wiped when this value is dropped, which is what locking does.
+/// It has no `Debug` or `Clone` implementation on purpose.
 pub struct UnlockedVault {
     pub(crate) dir: PathBuf,
     pub(crate) conn: Connection,
@@ -50,6 +60,9 @@ impl UnlockedVault {
 }
 
 /// The vault stored in one folder.
+///
+/// A `Vault` is not thread-safe by itself: the application state serializes
+/// access to it (see `state.rs`).
 pub struct Vault {
     dir: PathBuf,
     kdf: KdfParams,
@@ -139,6 +152,9 @@ impl Vault {
 
     /// Unlocks the vault with `password`.
     ///
+    /// The vault is locked first, so a failed attempt leaves it locked even if
+    /// it was unlocked before.
+    ///
     /// # Errors
     /// - [`AppError::VaultNotFound`] if there is no vault.
     /// - [`AppError::WrongPasswordOrCorrupt`] if the password is wrong.
@@ -165,6 +181,10 @@ impl Vault {
 
     /// Changes the master password. The vault key and the data stay the same;
     /// only the key header is replaced, in a single transaction.
+    ///
+    /// The current password is checked again even though the vault is unlocked,
+    /// and the header must unwrap to the key that is in use. The new header is
+    /// derived with this vault's current Argon2id parameters.
     ///
     /// # Errors
     /// - [`AppError::Locked`] if the vault is locked.
@@ -208,7 +228,11 @@ impl Vault {
     }
 }
 
-/// Reads the key header from the database.
+/// Reads and decodes the key header from the database.
+///
+/// # Errors
+/// Returns [`AppError::Corrupt`] if the header is missing or invalid, and
+/// [`AppError::UnsupportedVersion`] if a newer format wrote it.
 pub(crate) fn read_header(conn: &Connection) -> AppResult<VaultHeader> {
     let bytes = db::get_meta(conn, HEADER_META_KEY)?
         .ok_or_else(|| AppError::Corrupt("missing vault header".into()))?;
@@ -274,6 +298,8 @@ pub(crate) mod tests {
         assert_eq!(vault.create(PASSWORD).unwrap_err(), AppError::VaultExists);
     }
 
+    /// A `vault.db.creating` left by an interrupted creation does not block a
+    /// new one.
     #[test]
     fn create_replaces_a_stale_temporary_file() {
         let dir = tempfile::tempdir().unwrap();

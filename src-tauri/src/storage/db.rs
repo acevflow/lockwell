@@ -19,6 +19,8 @@ use crate::error::{AppError, AppResult};
 /// Current schema version, stored in SQLite's `user_version`.
 pub const SCHEMA_VERSION: i32 = 1;
 
+/// SQL that creates the version 1 schema. `WITHOUT ROWID` keeps rows keyed by
+/// their random id only, with no extra sequential row number.
 const SCHEMA_V1: &str = "
     CREATE TABLE meta (key TEXT PRIMARY KEY, value BLOB NOT NULL) WITHOUT ROWID;
     CREATE TABLE entries (id TEXT PRIMARY KEY, data BLOB NOT NULL) WITHOUT ROWID;
@@ -35,6 +37,8 @@ pub enum Table {
 }
 
 impl Table {
+    /// SQL table name. Only these fixed names are ever formatted into the
+    /// queries below, so no caller-provided text reaches the SQL string.
     fn name(self) -> &'static str {
         match self {
             Table::Entries => "entries",
@@ -175,6 +179,7 @@ pub fn delete_record(conn: &Connection, table: Table, id: &str) -> AppResult<()>
     Ok(())
 }
 
+/// Singular name of the records of `table`, used in `NotFound` errors.
 fn record_name(table: Table) -> &'static str {
     match table {
         Table::Entries => "entry",
@@ -182,11 +187,15 @@ fn record_name(table: Table) -> &'static str {
     }
 }
 
+/// Applies per-connection settings. `secure_delete` makes SQLite overwrite
+/// deleted rows, so removed (still encrypted) records do not linger on disk.
 fn configure(conn: &Connection) -> AppResult<()> {
     conn.pragma_update(None, "secure_delete", true)?;
     Ok(())
 }
 
+/// Turns SQLite's "not a database" error, raised when the file is not SQLite
+/// at all, into [`AppError::Corrupt`]; any other error is passed through.
 fn map_not_a_database(error: rusqlite::Error) -> AppError {
     match error.sqlite_error_code() {
         Some(ErrorCode::NotADatabase) => {

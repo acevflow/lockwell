@@ -23,6 +23,11 @@
 //! copied as they are, already encrypted. Restoring decrypts and checks the
 //! whole backup in a staging folder next to the vault, and only then swaps
 //! it in, so a failed restore never touches the current vault.
+//!
+//! A backup is only as private as the master password it was made under: it
+//! carries the key header of that moment, and restoring needs that password,
+//! not the current one. The backup file, the snapshot and the staging
+//! folder only ever hold encrypted data.
 
 use std::collections::{HashSet, VecDeque};
 use std::fs::{self, File, OpenOptions};
@@ -43,15 +48,21 @@ use crate::storage::db::{self, Table};
 
 /// Extension of backup files.
 pub const BACKUP_EXTENSION: &str = "lwbackup";
+/// Magic bytes at the start of every backup file.
 const BACKUP_MAGIC: &[u8; 4] = b"LWBK";
 /// Version of the backup format.
 pub const BACKUP_FORMAT_VERSION: u32 = 1;
+/// Length of the clear prefix: magic, format version and key header.
 const PREFIX_LEN: usize = 8 + HEADER_LEN;
+/// Magic bytes at the start of the decrypted container.
 const CONTAINER_MAGIC: &[u8; 4] = b"LWBC";
 /// Name of the decrypted container while a backup is being restored.
 const CONTENTS_TEMP_FILE: &str = "contents.tmp";
+/// Record kind that ends the container.
 const KIND_END: u8 = 0;
+/// Record kind of the database snapshot.
 const KIND_DATABASE: u8 = 1;
+/// Record kind of an encrypted file blob.
 const KIND_BLOB: u8 = 2;
 
 impl UnlockedVault {
@@ -81,6 +92,8 @@ impl UnlockedVault {
         result
     }
 
+    /// Writes a consistent copy of the database to `snapshot` with
+    /// `VACUUM INTO`, which also works while the connection is in use.
     fn snapshot_database(&self, snapshot: &Path) -> AppResult<()> {
         let path = snapshot
             .to_str()
@@ -118,7 +131,12 @@ impl Vault {
     /// - [`AppError::UnsupportedVersion`] for a backup from a newer version.
     /// - [`AppError::InvalidInput`] if `backup` is inside the vault folder.
     ///
-    /// On any error the current vault is left as it was.
+    /// On any error the vault folder is left as it was. If the failure
+    /// happens while swapping the folders, the session has already been
+    /// locked.
+    ///
+    /// The whole backup is decrypted and checked before anything is replaced,
+    /// so this can take a while for large vaults.
     pub fn restore_backup(&mut self, backup: &Path, password: &str) -> AppResult<()> {
         if !fs::metadata(backup)?.is_file() {
             return Err(AppError::invalid("the backup must be a file"));
@@ -150,6 +168,9 @@ impl Vault {
         swapped
     }
 
+    /// Splits the vault folder into its parent and its name; the staging and
+    /// replaced folders are created next to it, on the same volume, so the
+    /// final renames are cheap.
     fn parent_and_name(&self) -> AppResult<(PathBuf, String)> {
         let parent = self
             .dir()
@@ -184,6 +205,9 @@ impl Vault {
 }
 
 /// Decrypts the backup into `staging` and checks everything in it.
+///
+/// The decrypted container is first written to a temporary file inside
+/// `staging` and then unpacked. On any error the caller removes `staging`.
 fn stage_backup(
     staging: &Path,
     reader: &mut impl Read,
@@ -210,6 +234,11 @@ fn stage_backup(
 }
 
 /// Writes the records of the container into `staging`.
+///
+/// The container is authenticated, but its parser still treats it as
+/// untrusted: only one database record named `vault.db` and blob records
+/// with generated-id names are accepted, each name once, so a record cannot
+/// point outside `staging` or overwrite another one.
 fn unpack_contents(reader: &mut impl Read, staging: &Path) -> AppResult<()> {
     let mut magic = [0u8; 4];
     read_exact(reader, &mut magic)?;
@@ -255,6 +284,7 @@ fn read_name(reader: &mut impl Read) -> AppResult<String> {
 }
 
 /// Reads the length-prefixed data of a record into a new file at `target`.
+/// `create_new` makes it fail rather than overwrite an existing file.
 fn copy_record_data(reader: &mut impl Read, target: &Path) -> AppResult<()> {
     let len = read_u64(reader)?;
     let mut file = BufWriter::new(
@@ -271,6 +301,11 @@ fn copy_record_data(reader: &mut impl Read, target: &Path) -> AppResult<()> {
 }
 
 /// Opens the staged vault with `key` and checks every record and file.
+///
+/// The header stored in the database must equal the one in the backup prefix,
+/// every entry and file description must decrypt, and every listed file must
+/// have its blob with the right magic. Blob contents are not decrypted here;
+/// that happens when the file is exported.
 fn check_staged_vault(staging: &Path, header: &VaultHeader, key: &SecretKey) -> AppResult<()> {
     let conn = db::open(&staging.join(DATABASE_FILE))?;
     if read_header(&conn)?.to_bytes() != header.to_bytes() {
@@ -295,6 +330,7 @@ fn check_staged_vault(staging: &Path, header: &VaultHeader, key: &SecretKey) -> 
     Ok(())
 }
 
+/// Builds the clear prefix of a backup: magic, format version and key header.
 fn backup_prefix(header: &VaultHeader) -> Vec<u8> {
     let mut prefix = Vec::with_capacity(PREFIX_LEN);
     prefix.extend_from_slice(BACKUP_MAGIC);
@@ -303,6 +339,7 @@ fn backup_prefix(header: &VaultHeader) -> Vec<u8> {
     prefix
 }
 
+/// Checks the prefix of a backup and decodes its key header.
 fn parse_prefix(prefix: &[u8; PREFIX_LEN]) -> AppResult<VaultHeader> {
     if &prefix[..4] != BACKUP_MAGIC {
         return Err(not_a_backup());
@@ -326,6 +363,8 @@ fn backup_aad(prefix: &[u8]) -> Vec<u8> {
     aad
 }
 
+/// Queues a container record: a header with kind, name and length, then the
+/// file content, as readers for [`Concat`].
 fn add_record(
     parts: &mut VecDeque<Box<dyn Read + Send>>,
     kind: u8,
@@ -364,11 +403,14 @@ impl Read for Concat {
     }
 }
 
+/// Whether `name` is `<generated id>.lwf`, the only blob names a backup may hold.
 fn is_blob_name(name: &str) -> bool {
     name.strip_suffix(&format!(".{BLOB_EXTENSION}"))
         .is_some_and(is_valid_id)
 }
 
+/// Fills `buffer` or fails with a "truncated" corruption error. The `read_u*`
+/// helpers below build on it and read little-endian integers.
 fn read_exact(reader: &mut impl Read, buffer: &mut [u8]) -> AppResult<()> {
     reader
         .read_exact(buffer)
@@ -393,10 +435,12 @@ fn read_u64(reader: &mut impl Read) -> AppResult<u64> {
     Ok(u64::from_le_bytes(bytes))
 }
 
+/// A corruption error for an invalid backup, with a short detail.
 fn corrupt(detail: &str) -> AppError {
     AppError::Corrupt(format!("invalid backup: {detail}"))
 }
 
+/// The error for a file that does not start like a backup.
 fn not_a_backup() -> AppError {
     AppError::Corrupt("the file is not a lockwell backup".into())
 }
@@ -559,6 +603,7 @@ mod tests {
         }
     }
 
+    /// The clear prefix is authenticated together with the contents.
     #[test]
     fn a_tampered_clear_prefix_is_rejected() {
         let (_vault_dir, mut vault, outside, backup) = vault_with_backup();

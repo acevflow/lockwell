@@ -4,6 +4,10 @@
 //! entry (title, username, password, URL, notes and timestamps) serialized as
 //! JSON and encrypted with the vault key. The associated data binds the row
 //! to its id, so rows cannot be swapped or copied under another id.
+//!
+//! Secrets (`EntryInput`, `Entry` and the JSON buffer used to encrypt) are
+//! wiped from memory when dropped. Lists carry only [`EntrySummary`], which has
+//! no password or notes; the full entry is returned only by `get_entry`.
 
 use serde::{Deserialize, Serialize};
 use zeroize::{Zeroize, ZeroizeOnDrop, Zeroizing};
@@ -87,6 +91,7 @@ pub struct Entry {
 }
 
 impl Entry {
+    /// The list view of this entry, without password or notes.
     fn summary(&self) -> EntrySummary {
         EntrySummary {
             id: self.id.clone(),
@@ -167,6 +172,7 @@ impl UnlockedVault {
         db::delete_record(&self.conn, Table::Entries, id)
     }
 
+    /// Serializes and encrypts an entry, bound to its id by the associated data.
     fn encrypt_entry(&self, entry: &Entry) -> AppResult<Vec<u8>> {
         let json = Zeroizing::new(
             serde_json::to_vec(entry)
@@ -175,6 +181,9 @@ impl UnlockedVault {
         Ok(aead::seal(&self.key, &json, &entry_aad(&entry.id))?)
     }
 
+    /// Decrypts a row. Any failure (wrong key, row moved under another id,
+    /// tampering, bad JSON) is [`AppError::Corrupt`]; the entry content never
+    /// appears in the error.
     fn decrypt_entry(&self, id: String, data: &[u8]) -> AppResult<Entry> {
         let json = aead::open(&self.key, data, &entry_aad(&id))
             .map_err(|_| AppError::Corrupt("an entry failed to decrypt".into()))?;
@@ -190,6 +199,9 @@ fn entry_aad(id: &str) -> Vec<u8> {
     format!("lockwell:entry:v1:{id}").into_bytes()
 }
 
+/// Builds an entry from user input. Title, username and URL are trimmed;
+/// password and notes are kept exactly as typed, because whitespace can be a
+/// meaningful part of a secret.
 fn entry_from_input(id: String, input: &EntryInput, created_at: i64, updated_at: i64) -> Entry {
     Entry {
         id,
@@ -231,6 +243,8 @@ pub fn validate_entry(input: &EntryInput) -> AppResult<()> {
     Ok(())
 }
 
+/// Checks the length of `value` in characters (not bytes). The error names
+/// the field and the limit, never the value.
 fn check_length(field: &str, value: &str, max_chars: usize) -> AppResult<()> {
     if value.chars().count() > max_chars {
         return Err(AppError::invalid(format!(
@@ -428,6 +442,8 @@ mod tests {
         }
     }
 
+    /// A row copied under another id fails to decrypt, because the id is part
+    /// of the associated data.
     #[test]
     fn swapped_rows_are_detected() {
         let (_dir, vault) = unlocked_vault();
@@ -562,6 +578,8 @@ mod tests {
         );
     }
 
+    /// A row that decrypts correctly but does not hold a valid entry is still
+    /// reported as corrupt.
     #[test]
     fn authentic_rows_with_an_invalid_format_are_corrupt() {
         // The row decrypts with the right key and context, but is not an entry.
