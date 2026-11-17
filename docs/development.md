@@ -128,7 +128,9 @@ integration tests and by component tests with individual mocks.
 `windows-latest`. In order: checkout, Node.js, Rust (stable with clippy,
 rustfmt, llvm-tools), Rust cache, `cargo-llvm-cov`, `npm ci`, `format:check`,
 `licenses:check` (fails if `THIRD-PARTY-LICENSES.md` is out of date after a
-`Cargo.lock` change; fix it with `npm run licenses`), `typecheck`, `lint`,
+`Cargo.lock` change; fix it with `npm run licenses`; for Dependabot pull
+requests it only shows a warning, so regenerate the file before merging),
+`typecheck`, `lint`,
 `test:coverage`, upload of the coverage report and
 `npm run tauri build`. `.github/workflows/codeql.yml` runs CodeQL for
 JavaScript/TypeScript, Rust and GitHub Actions on pushes, pull requests and

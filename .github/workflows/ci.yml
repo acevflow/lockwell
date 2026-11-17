@@ -60,9 +60,17 @@ jobs:
         run: npm run format:check
 
       # Fails when Cargo.lock changed and THIRD-PARTY-LICENSES.md was not
-      # regenerated with `npm run licenses`.
+      # regenerated with `npm run licenses`. For Dependabot updates it only
+      # warns (see the next step), because the bot cannot regenerate the file.
       - name: Check the third-party licenses
+        id: licenses
         run: npm run licenses:check
+        continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
+
+      # Runs only when the check above failed but was allowed to (Dependabot).
+      - name: Warn that the third-party licenses need regenerating
+        if: ${{ steps.licenses.outcome == 'failure' }}
+        run: echo "::warning title=Third-party licenses::THIRD-PARTY-LICENSES.md is out of date. Run 'npm run licenses' and commit the result before merging."
 
       - name: Type check
         run: npm run typecheck
