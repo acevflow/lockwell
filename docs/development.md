@@ -137,6 +137,18 @@ JavaScript/TypeScript, Rust and GitHub Actions on pushes, pull requests and
 weekly. Dependabot (`.github/dependabot.yml`) proposes weekly updates for npm,
 Cargo and GitHub Actions.
 
+## Releasing
+
+To publish a version, update the version in `package.json`,
+`package-lock.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` and
+`src-tauri/Cargo.lock`, turn `Unreleased` in `CHANGELOG.md` into the new
+version, merge to `main` and push an annotated tag `vX.Y.Z`.
+`.github/workflows/release.yml` runs on `v*` tags: it checks that the tag
+matches the app version, builds the MSI and NSIS installers on
+`windows-latest`, computes `SHA256SUMS.txt` and creates the GitHub release with
+the notes of that version from `CHANGELOG.md`. The installers are not
+code-signed.
+
 A change is ready when `npm run format:check`, `npm run typecheck`,
 `npm run lint` and `npm test` all pass.
 
