@@ -1,3 +1,4 @@
+/** Tests that each command wrapper calls the right command with the right arguments, and the lock-event listener. */
 import { listen } from "@tauri-apps/api/event";
 import { describe, expect, it, vi } from "vitest";
 import { callsTo, emitEvent, failWith, mockCommands } from "../test/tauriMock";

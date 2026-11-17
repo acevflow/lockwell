@@ -1,3 +1,4 @@
+/** Tests of the master password rules, which mirror those of the core. */
 import { describe, expect, it } from "vitest";
 import {
   MAX_MASTER_PASSWORD_CHARS,

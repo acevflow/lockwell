@@ -1,3 +1,4 @@
+/** Tests of the command client: error conversion, error predicates and messages. */
 import { describe, expect, it } from "vitest";
 import { commandError, failWith, mockCommands } from "../test/tauriMock";
 import {

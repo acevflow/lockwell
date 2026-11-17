@@ -1,3 +1,4 @@
+/** Tests of the Passwords tab against an in-memory stand-in for the core. */
 import {
   fireEvent,
   render,
@@ -71,6 +72,7 @@ function rejectUnknownFields(entry: unknown) {
   }
 }
 
+/** A complete entry with empty URL and notes and fixed timestamps. */
 function makeEntry(
   id: string,
   title: string,
@@ -89,6 +91,7 @@ function makeEntry(
   };
 }
 
+/** The entries list in the sidebar. */
 function entryList() {
   return screen.getByRole("list", { name: "Entries" });
 }
@@ -283,6 +286,7 @@ describe("PasswordsTab", () => {
     );
   });
 
+  // The entry is already saved when the refresh fails, so it is still shown.
   it("shows the new entry and an error when the list cannot be refreshed", async () => {
     render(<PasswordsTab onLocked={vi.fn()} />);
     await screen.findByRole("button", { name: /Mail/ });

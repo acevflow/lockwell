@@ -1,3 +1,4 @@
+/** Tests of the Settings tab: master password change, backup and restore. */
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { callsTo, failWith, mockCommands } from "../test/tauriMock";

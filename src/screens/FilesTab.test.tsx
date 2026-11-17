@@ -1,3 +1,4 @@
+/** Tests of the Files tab against a mocked core. */
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ApiError } from "../api/client";
@@ -125,6 +126,7 @@ describe("FilesTab", () => {
     await vi.waitFor(() => expect(onLocked).toHaveBeenCalledOnce());
   });
 
+  // A late `locked` error must not call `onLocked` once the tab is unmounted.
   it("ignores a list that fails after leaving the tab", async () => {
     let fail!: (reason: unknown) => void;
     mockCommands({

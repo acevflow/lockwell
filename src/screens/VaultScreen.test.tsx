@@ -1,3 +1,4 @@
+/** Tests of the unlocked vault screen: tabs, lock button and lock events. */
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { VAULT_LOCKED_EVENT } from "../api/security";

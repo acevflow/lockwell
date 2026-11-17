@@ -1,3 +1,4 @@
+/** Tests of the backup components: creating a backup and restoring one. */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { callsTo, failWith, mockCommands } from "../test/tauriMock";
