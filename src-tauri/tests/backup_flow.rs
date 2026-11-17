@@ -58,6 +58,7 @@ fn a_backup_restores_on_another_computer() {
     assert_eq!(fs::read(exported).unwrap(), b"backed up content");
 }
 
+/// Restoring drops anything added after the backup was made.
 #[test]
 fn restoring_replaces_newer_changes() {
     let (workspace, backup) = backed_up();
@@ -74,6 +75,9 @@ fn restoring_replaces_newer_changes() {
     assert_eq!(titles(&vault), ["backed title"]);
 }
 
+/// A truncated, a bit-flipped and an empty backup are each refused as
+/// corrupt; the vault stays unlocked with its data and no extra folder is
+/// left next to it.
 #[test]
 fn damaged_backups_leave_the_vault_untouched() {
     let (workspace, backup) = backed_up();
@@ -100,6 +104,7 @@ fn damaged_backups_leave_the_vault_untouched() {
     }
 }
 
+/// On a computer without a vault, a wrong password fails and creates no vault.
 #[test]
 fn a_wrong_password_does_not_open_a_backup() {
     let (_original, backup) = backed_up();

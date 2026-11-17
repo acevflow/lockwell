@@ -21,6 +21,9 @@ fn unlocked_state(workspace: &Workspace) -> (AppState, MemoryClipboard) {
     (state, clipboard)
 }
 
+/// Provokes one error of each kind (validation, file system, wrong password)
+/// and checks that the serialized errors do not repeat the secrets, the paths
+/// or the passwords that were sent in.
 #[test]
 fn errors_never_contain_passwords_data_or_paths() {
     let workspace = Workspace::new();
@@ -71,6 +74,8 @@ fn keys_are_redacted_in_debug_output() {
     assert!(!printed.to_lowercase().contains("ab"));
 }
 
+/// SQL, path traversal, NUL and oversized identifiers are refused as invalid
+/// input by every operation that takes an id, and the stored data is intact.
 #[test]
 fn malicious_ids_are_rejected_before_reaching_storage() {
     let workspace = Workspace::new();
@@ -95,6 +100,7 @@ fn malicious_ids_are_rejected_before_reaching_storage() {
     assert_eq!(unlocked.list_entries().unwrap().len(), 1);
 }
 
+/// A caller cannot set fields such as `id` or `createdAt` through the input.
 #[test]
 fn input_with_unknown_fields_is_refused() {
     let parsed: Result<EntryInput, _> =
@@ -112,6 +118,8 @@ fn weak_master_passwords_are_refused() {
     assert!(!vault.exists());
 }
 
+/// After locking, the copied secret is gone; if the user copied something
+/// else in the meantime, that text is left alone.
 #[test]
 fn locking_clears_a_copied_secret_but_not_user_text() {
     let workspace = Workspace::new();
@@ -128,6 +136,7 @@ fn locking_clears_a_copied_secret_but_not_user_text() {
     assert_eq!(clipboard.text().as_deref(), Some("text the user copied"));
 }
 
+/// Past the idle timeout the vault locks and the clipboard is cleared.
 #[test]
 fn the_idle_lock_locks_and_clears_the_clipboard() {
     let workspace = Workspace::new();

@@ -33,6 +33,7 @@ pub struct Workspace {
 }
 
 impl Workspace {
+    /// A new workspace with an empty `outside` folder.
     pub fn new() -> Workspace {
         let root = tempfile::tempdir().unwrap();
         fs::create_dir(root.path().join("outside")).unwrap();
@@ -120,10 +121,12 @@ pub struct MemoryClipboard {
 }
 
 impl MemoryClipboard {
+    /// The current clipboard text, if any.
     pub fn text(&self) -> Option<String> {
         self.content.lock().unwrap().clone()
     }
 
+    /// Replaces the content, as another program copying text would.
     pub fn set(&self, text: &str) {
         *self.content.lock().unwrap() = Some(text.to_owned());
     }

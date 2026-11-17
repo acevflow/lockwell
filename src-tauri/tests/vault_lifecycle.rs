@@ -32,6 +32,8 @@ fn a_new_vault_can_be_reopened_from_disk() {
     assert_eq!(stored.password, "kept-password");
 }
 
+/// Create, lock, unlock, change the master password and reopen from disk:
+/// the old password stops working and the entry is still there.
 #[test]
 fn the_full_life_cycle_keeps_the_data() {
     let workspace = Workspace::new();
@@ -76,6 +78,7 @@ fn a_second_vault_cannot_be_created_over_the_first() {
     assert!(!second.is_unlocked());
 }
 
+/// Unlocking where no vault exists reports it and does not create the folder.
 #[test]
 fn opening_a_missing_vault_is_reported() {
     let workspace = Workspace::new();
