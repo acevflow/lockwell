@@ -10,6 +10,11 @@ and this project adheres to
 
 ### Added
 
+- `THIRD-PARTY-LICENSES.md`: licenses of the third-party software in a Linux
+  build (the 278 Rust crates the runtime links, plus the system GTK and
+  WebKitGTK libraries and what bundling them requires), to accompany Linux
+  packages.
+
 - Code coverage measurement for the interface (Vitest) and the Rust core
   (`npm run test:coverage`), also run in CI with the report uploaded.
 - Many more automated tests: integration tests for the vault, files, backups
