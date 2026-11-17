@@ -1,5 +1,8 @@
+/** Inline error message for forms and tabs. */
 interface ErrorBannerProps {
+  /** Text to show; nothing is rendered when it is `null` or empty. */
   message: string | null;
+  /** Adds a Dismiss button that calls this when pressed. */
   onDismiss?: () => void;
 }
 

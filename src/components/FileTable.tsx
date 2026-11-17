@@ -1,11 +1,15 @@
+/** Table of the files stored in the vault. */
 import type { FileSummary } from "../api/types";
 import { formatBytes } from "../format";
 
 interface FileTableProps {
+  /** Files to list, in display order. */
   files: FileSummary[];
   /** Disables the row buttons while an operation runs. */
   disabled: boolean;
+  /** Called when the user asks for a decrypted copy of `file`. */
   onSaveCopy: (file: FileSummary) => void;
+  /** Called when the user asks to delete `file`; the caller confirms. */
   onDelete: (file: FileSummary) => void;
 }
 

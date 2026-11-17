@@ -1,3 +1,4 @@
+/** Screen shown while the vault is unlocked: the tab bar and the active tab. */
 import { useState } from "react";
 import type { LockReason } from "../api/security";
 import { useActivityReporter } from "../hooks/useActivityReporter";
@@ -18,6 +19,7 @@ interface VaultScreenProps {
   onRestored: () => void;
 }
 
+/** Sections of the unlocked vault, in display order. */
 const TABS = [
   { id: "passwords", label: "Passwords" },
   { id: "files", label: "Files" },
@@ -29,7 +31,8 @@ type TabId = (typeof TABS)[number]["id"];
 /**
  * The unlocked vault. Everything decrypted lives in the state of this
  * component tree, so it is discarded when the vault locks and this screen
- * unmounts.
+ * unmounts. While mounted it reports user activity to the core and listens for
+ * the core locking the vault on its own.
  */
 function VaultScreen({ onLock, onLocked, onRestored }: VaultScreenProps) {
   const [tab, setTab] = useState<TabId>("passwords");

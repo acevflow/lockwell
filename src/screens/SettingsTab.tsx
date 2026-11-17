@@ -1,3 +1,4 @@
+/** Settings tab: change the master password, create a backup, restore one. */
 import { useState, type FormEvent } from "react";
 import {
   errorMessage,
@@ -23,6 +24,10 @@ interface SettingsTabProps {
 
 /** Vault settings: master password, backup and restore. */
 function SettingsTab({ onLocked, onRestored }: SettingsTabProps) {
+  /**
+   * Error handler for the backup panel: a `locked` error leaves the vault
+   * screen and returns `null` (nothing to show), any other becomes a message.
+   */
   function backupError(cause: unknown): string | null {
     if (isLockedError(cause)) {
       onLocked();

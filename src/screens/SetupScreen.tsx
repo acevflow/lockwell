@@ -1,3 +1,4 @@
+/** First-run screen: create the vault or restore a backup. */
 import { useState, type FormEvent } from "react";
 import { errorMessage } from "../api/client";
 import { createVault } from "../api/vault";
@@ -18,7 +19,9 @@ interface SetupScreenProps {
 
 /**
  * First run: choose the master password and create the vault, or restore
- * an existing backup instead.
+ * an existing backup instead. The password is checked here for quick feedback
+ * and again by the core, and the user must acknowledge that it cannot be
+ * recovered. The typed passwords are cleared once the vault is created.
  */
 function SetupScreen({ onCreated, onRestored }: SetupScreenProps) {
   const [restoring, setRestoring] = useState(false);

@@ -1,3 +1,4 @@
+/** Files tab: list, add, save a copy of and delete encrypted files. */
 import { useCallback, useState } from "react";
 import { deleteFile, exportFile, importFiles, listFiles } from "../api/files";
 import type { FileSummary } from "../api/types";
@@ -26,6 +27,11 @@ function FilesTab({ onLocked }: FilesTabProps) {
 
   useInitialLoad(listFiles, setFiles, report);
 
+  /**
+   * Runs one file operation: shows `label` while it runs, then the message it
+   * returns (or nothing for `null`). Only one operation runs at a time; the
+   * buttons are disabled while `busy`.
+   */
   async function run(label: string, action: () => Promise<string | null>) {
     clear();
     setStatus(null);
