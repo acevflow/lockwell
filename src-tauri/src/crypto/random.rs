@@ -1,4 +1,8 @@
 //! Random bytes and identifiers from the operating system generator.
+//!
+//! This is the only source of randomness in the crypto layer: keys, nonces,
+//! salts and identifiers all come from here. There is no fallback generator;
+//! if the system one fails, the operation fails with [`CryptoError::Random`].
 
 use super::CryptoError;
 
@@ -35,6 +39,10 @@ pub fn random_id() -> Result<String, CryptoError> {
 }
 
 /// Returns `true` if `id` has the exact shape produced by [`random_id`].
+///
+/// Identifiers end up in file paths, so an id that comes from outside the
+/// process must be checked with this function before use; the accepted shape
+/// contains no path separators or `..` segments.
 pub fn is_valid_id(id: &str) -> bool {
     id.len() == ID_LEN * 2
         && id

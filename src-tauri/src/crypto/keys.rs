@@ -1,4 +1,7 @@
 //! Symmetric key type that is wiped from memory when dropped.
+//!
+//! Every symmetric key in the crypto layer is a [`SecretKey`], so wiping and
+//! redaction are enforced in one place.
 
 use std::fmt;
 
@@ -13,7 +16,9 @@ pub const KEY_LEN: usize = 32;
 /// A 256-bit symmetric key.
 ///
 /// The bytes are overwritten with zeros when the value is dropped, and the
-/// `Debug` output never shows them.
+/// `Debug` output never shows them. `Clone` is derived: each clone is wiped on
+/// its own drop, but every clone is one more copy in memory, so clone only
+/// when a second owner is really needed.
 #[derive(Clone, Zeroize, ZeroizeOnDrop)]
 pub struct SecretKey([u8; KEY_LEN]);
 
@@ -54,6 +59,8 @@ impl SecretKey {
     }
 
     /// Read access to the key bytes.
+    ///
+    /// Callers must not copy the bytes into buffers that are not wiped.
     pub fn as_bytes(&self) -> &[u8; KEY_LEN] {
         &self.0
     }
