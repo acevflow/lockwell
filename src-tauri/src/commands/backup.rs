@@ -2,9 +2,10 @@
 //! native save and open dialogs.
 
 use tauri::{AppHandle, Runtime, State};
-use tauri_plugin_dialog::{DialogExt, FilePath};
+use tauri_plugin_dialog::DialogExt;
 use zeroize::Zeroizing;
 
+use super::dialog::{run_blocking, to_path};
 use crate::error::{AppError, AppResult};
 use crate::state::AppState;
 use crate::vault::backup::BACKUP_EXTENSION;
@@ -73,10 +74,12 @@ pub async fn restore_backup<R: Runtime>(
     Ok(true)
 }
 
+const MILLIS_PER_DAY: i64 = 86_400_000;
+
 /// Default backup file name for the date of `millis`, such as
 /// `lockwell-backup-2026-11-16.lwbackup`.
 fn backup_file_name(millis: i64) -> String {
-    let (year, month, day) = civil_date(millis.div_euclid(86_400_000));
+    let (year, month, day) = civil_date(millis.div_euclid(MILLIS_PER_DAY));
     format!("lockwell-backup-{year:04}-{month:02}-{day:02}.{BACKUP_EXTENSION}")
 }
 
@@ -99,19 +102,6 @@ fn civil_date(days: i64) -> (i64, u32, u32) {
     let year = year_of_era + era * 400 + i64::from(month <= 2);
     // Both values are small and positive by construction.
     (year, month as u32, day as u32)
-}
-
-async fn run_blocking<T: Send + 'static>(
-    dialog: impl FnOnce() -> T + Send + 'static,
-) -> AppResult<T> {
-    tauri::async_runtime::spawn_blocking(dialog)
-        .await
-        .map_err(|_| AppError::Io("the file dialog failed".into()))
-}
-
-fn to_path(path: FilePath) -> AppResult<std::path::PathBuf> {
-    path.into_path()
-        .map_err(|_| AppError::invalid("the selected location is not a local file"))
 }
 
 #[cfg(test)]

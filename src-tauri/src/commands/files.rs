@@ -3,11 +3,10 @@
 //! The native open and save dialogs are shown from the core, so the
 //! interface never handles file system paths.
 
-use std::path::PathBuf;
-
 use tauri::{AppHandle, Runtime, State};
-use tauri_plugin_dialog::{DialogExt, FilePath};
+use tauri_plugin_dialog::DialogExt;
 
+use super::dialog::{run_blocking, to_path};
 use crate::error::{AppError, AppResult};
 use crate::state::AppState;
 use crate::vault::files::FileSummary;
@@ -95,18 +94,4 @@ pub async fn export_file<R: Runtime>(
 #[tauri::command]
 pub fn delete_file(state: State<'_, AppState>, id: String) -> AppResult<()> {
     state.with_vault(|vault| vault.unlocked()?.delete_file(&id))
-}
-
-/// Runs a native dialog off the async runtime threads.
-async fn run_blocking<T: Send + 'static>(
-    dialog: impl FnOnce() -> T + Send + 'static,
-) -> AppResult<T> {
-    tauri::async_runtime::spawn_blocking(dialog)
-        .await
-        .map_err(|_| AppError::Io("the file dialog failed".into()))
-}
-
-fn to_path(path: FilePath) -> AppResult<PathBuf> {
-    path.into_path()
-        .map_err(|_| AppError::invalid("the selected location is not a local file"))
 }

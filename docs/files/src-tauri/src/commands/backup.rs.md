@@ -15,4 +15,4 @@ to `.lwbackup` files.
   master password when the backup was made. Afterwards the vault is locked
   and a secret left on the clipboard is cleared.
 
-Tests cover the date conversion and the suggested file name.
+The dialog helpers live in `dialog.rs`. Tests cover the date conversion and the suggested file name.

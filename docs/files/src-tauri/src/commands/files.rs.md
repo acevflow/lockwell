@@ -11,6 +11,7 @@ handles file system paths.
 | `export_file`  | `id`      | `true` if saved, `false` if cancelled        |
 | `delete_file`  | `id`      | none                                         |
 
-Dialogs and encryption run on blocking threads. The vault is not held while
+Dialogs and encryption run on blocking threads (the dialog helpers live in
+`dialog.rs`). The vault is not held while
 a dialog is open. When saving, the native dialog has already asked before
 replacing an existing file.
