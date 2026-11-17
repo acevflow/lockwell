@@ -18,6 +18,8 @@ and this project adheres to
 
 ### Fixed
 
+- When adding several files failed part way, the Files list did not show the
+  files that had already been added until the tab was opened again.
 - File sizes just below a unit boundary were shown as "1000 KB" or "1000 MB"
   instead of "1 MB" or "1 GB".
 - The vault was locked by the inactivity timer the moment a command that ran

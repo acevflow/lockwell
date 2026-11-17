@@ -2,7 +2,12 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ApiError } from "../api/client";
 import type { FileSummary } from "../api/types";
-import { callsTo, failWith, mockCommands } from "../test/tauriMock";
+import {
+  callsTo,
+  commandError,
+  failWith,
+  mockCommands,
+} from "../test/tauriMock";
 import FilesTab from "./FilesTab";
 
 const REPORT: FileSummary = {
@@ -40,6 +45,23 @@ describe("FilesTab", () => {
     fireEvent.click(screen.getByRole("button", { name: "Add files" }));
     expect(await screen.findByText("Added “report.pdf”.")).toBeVisible();
     expect(screen.getByText("report.pdf")).toBeVisible();
+  });
+
+  it("reloads the list when adding fails after some files were added", async () => {
+    const stored: FileSummary[] = [];
+    mockCommands({
+      list_files: () => [...stored],
+      // The core adds files one by one and stops at the first that fails.
+      import_files: () => {
+        stored.push(REPORT);
+        throw commandError("invalid_input", "could not add “b.txt”: too long");
+      },
+    });
+    render(<FilesTab onLocked={vi.fn()} />);
+    await screen.findByText(/No files yet/);
+    fireEvent.click(screen.getByRole("button", { name: "Add files" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("b.txt");
+    expect(await screen.findByText("report.pdf")).toBeVisible();
   });
 
   it("says nothing when adding is cancelled", async () => {

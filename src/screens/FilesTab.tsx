@@ -53,7 +53,15 @@ function FilesTab({ onLocked }: FilesTabProps) {
 
   function add() {
     void run("Encrypting files…", async () => {
-      const added = await importFiles();
+      let added: FileSummary[];
+      try {
+        added = await importFiles();
+      } catch (importError) {
+        // The core adds files one by one, so some may be stored even though
+        // a later one failed: show what is really in the vault.
+        await reload().catch(() => undefined);
+        throw importError;
+      }
       await reload();
       if (added.length === 0) return null;
       return added.length === 1
