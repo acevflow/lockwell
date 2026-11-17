@@ -28,10 +28,10 @@ const VAULT_DIR: &str = "vault";
 ///
 /// Setup creates the [`AppState`] over the vault folder in the app data
 /// directory, starts the inactivity watcher and, on Windows, the session-lock
-/// watcher.
+/// watcher. When the app exits, a secret still on the clipboard is cleared.
 ///
 /// # Panics
-/// Panics if Tauri fails to start or run, which ends the process.
+/// Panics if Tauri fails to build the application, which ends the process.
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -66,6 +66,13 @@ pub fn run() {
             commands::backup::create_backup,
             commands::backup::restore_backup,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            // The clipboard timer dies with the process: clear a copied secret
+            // before exiting.
+            if matches!(event, tauri::RunEvent::Exit) {
+                app.state::<AppState>().clear_clipboard_on_exit();
+            }
+        });
 }

@@ -26,7 +26,7 @@ all logic lives in this library. The layers, from the inside out:
 - `pub fn run()`. It builds and runs the Tauri application. It does not return
   under normal use, because it runs the event loop until the app exits.
 
-`run` panics if Tauri fails to start or run (`expect("error while running tauri
+`run` panics if Tauri fails to build the app (`expect("error while building tauri
 application")`), which ends the process. It is marked
 `#[cfg_attr(mobile, tauri::mobile_entry_point)]`.
 
@@ -41,7 +41,8 @@ flowchart TD
     E --> F[spawn_idle_watcher]
     F --> G["watch_system_lock (Windows only)"]
     G --> H[register the 18 commands]
-    H --> I[generate_context and run]
+    H --> I[generate_context, build and run]
+    I --> J["on RunEvent::Exit: clear_clipboard_on_exit"]
 ```
 
 - `VAULT_DIR = "vault"`: the vault lives in a `vault` folder inside the app data

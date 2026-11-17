@@ -31,6 +31,7 @@ vault, the time of the last user activity and the clipboard.
 | `touch(&self)`                                                         | Records user activity now.                                                     |
 | `lock(&self) -> bool`                                                  | Locks the vault and clears a secret this app left on the clipboard. Returns whether the vault was unlocked. |
 | `lock_if_idle(&self, now: Instant) -> bool`                            | Locks only if the user has been idle as of `now`. Returns whether it locked.   |
+| `clear_clipboard_on_exit(&self) -> bool`                              | Clears a secret this app left on the clipboard when the app exits. Does not take the vault, so exiting never waits for a long operation. |
 | `copy_secret(&self, text: &str) -> AppResult<u64>`                     | Copies a secret and returns its generation.                                    |
 | `clear_clipboard_if_unchanged(&self, generation: u64) -> bool`         | Clears that copy if the clipboard still holds it.                              |
 
