@@ -137,6 +137,8 @@ pub fn decrypt<R: Read, W: Write>(
 }
 
 /// Returns the encrypted size of `plaintext_len` bytes, header included.
+/// Only the tests use it, to check the layout.
+#[cfg(test)]
 pub fn encrypted_len(plaintext_len: u64) -> u64 {
     let chunk = CHUNK_LEN as u64;
     let chunks = if plaintext_len == 0 {
