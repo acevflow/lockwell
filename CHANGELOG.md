@@ -14,6 +14,8 @@ and this project adheres to
   build (the 278 Rust crates the runtime links, plus the system GTK and
   WebKitGTK libraries and what bundling them requires), to accompany Linux
   packages.
+- `npm run licenses` and `npm run licenses:check`: a script that generates
+  `THIRD-PARTY-LICENSES.md` from `Cargo.lock` and checks that it is up to date.
 - Code coverage measurement for the interface (Vitest) and the Rust core
   (`npm run test:coverage`), also run in CI with the report uploaded.
 - Many more automated tests: integration tests for the vault, files, backups

@@ -40,6 +40,7 @@ lockwell/
 │   ├── hooks/               # Activity reporting, lock event, initial load
 │   ├── e2e/                 # End-to-end flows against the fake core
 │   └── test/                # Vitest setup, tauriMock and fakeCore
+├── scripts/                 # Maintenance scripts (third-party licenses)
 ├── docs/                    # This documentation
 │   └── files/               # One document per code file
 ├── .github/                 # CI, CodeQL, Dependabot, issue and PR templates
@@ -84,6 +85,8 @@ Run every command from the repository root.
 | Check formatting (Prettier, then `cargo fmt --check`) | `npm run format:check` |
 | Apply formatting | `npm run format` |
 | Type check (`tsc --noEmit` for the app and for the Node config) | `npm run typecheck` |
+| Regenerate `THIRD-PARTY-LICENSES.md` from `Cargo.lock` (needs `cargo`) | `npm run licenses` |
+| Check that `THIRD-PARTY-LICENSES.md` is up to date | `npm run licenses:check` |
 
 To run a subset of the tests:
 
