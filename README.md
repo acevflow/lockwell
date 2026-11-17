@@ -48,7 +48,7 @@ the SHA-256 of the file you downloaded with `SHA256SUMS.txt` before running it
 
 ## Project status
 
-lockwell **0.1.0** is the first beta. It has not been audited.
+lockwell **0.1.1** is the first published beta. It has not been audited.
 
 | Phase | Scope                                                 | Status |
 | ----- | ----------------------------------------------------- | ------ |

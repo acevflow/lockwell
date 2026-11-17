@@ -8,6 +8,18 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-17
+
+The `v0.1.0` tag was pushed but its release workflow failed, so no release was
+published for it. This version contains the same application as 0.1.0 and is
+the first published release.
+
+### Fixed
+
+- The release workflow failed to publish because the installers were kept in
+  subfolders when computing the SHA-256 checksums. It now moves them to one
+  folder and hashes only the files.
+
 ## [0.1.0] - 2026-11-17
 
 First beta. It has not been audited.
@@ -115,5 +127,6 @@ First beta. It has not been audited.
   app commands and listen for the lock event. File dialogs and the clipboard
   are used from the core.
 
-[Unreleased]: https://github.com/acevflow/lockwell/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/acevflow/lockwell/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/acevflow/lockwell/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/acevflow/lockwell/releases/tag/v0.1.0
