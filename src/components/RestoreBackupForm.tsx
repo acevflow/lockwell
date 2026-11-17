@@ -1,3 +1,4 @@
+/** Form that restores an encrypted backup, on first run or from the settings. */
 import { useState, type FormEvent } from "react";
 import { restoreBackup } from "../api/backup";
 import { errorMessage, isWrongPasswordError } from "../api/client";
@@ -14,7 +15,9 @@ interface RestoreBackupFormProps {
 
 /**
  * Restores an encrypted backup: asks for the master password the vault had
- * when the backup was made, then the core asks for the backup file.
+ * when the backup was made, then the core asks for the backup file. When it
+ * replaces an existing vault, a confirmation dialog comes first. A cancelled
+ * file dialog is not an error: the form simply becomes usable again.
  */
 function RestoreBackupForm({
   replacesVault,

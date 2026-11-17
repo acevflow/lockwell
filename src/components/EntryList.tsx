@@ -1,8 +1,12 @@
+/** Selectable list of password entries. */
 import type { EntrySummary } from "../api/types";
 
 interface EntryListProps {
+  /** Entries to show, already filtered and sorted. */
   entries: EntrySummary[];
+  /** Id of the entry that is open, if any. */
   selectedId: string | null;
+  /** Called with the id of the entry the user clicks. */
   onSelect: (id: string) => void;
   /** Shown when `entries` is empty. */
   emptyMessage: string;

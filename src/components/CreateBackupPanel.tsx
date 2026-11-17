@@ -1,3 +1,4 @@
+/** Settings panel that creates an encrypted backup of the vault. */
 import { useState } from "react";
 import { createBackup } from "../api/backup";
 import ErrorBanner from "./ErrorBanner";
@@ -7,7 +8,10 @@ interface CreateBackupPanelProps {
   onError: (error: unknown) => string | null;
 }
 
-/** Creates an encrypted backup of the whole vault. */
+/**
+ * Creates an encrypted backup of the whole vault. The core asks where to save
+ * the file; cancelling the dialog is not an error and shows nothing.
+ */
 function CreateBackupPanel({ onError }: CreateBackupPanelProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

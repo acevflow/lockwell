@@ -1,3 +1,4 @@
+/** Screen shown while the vault is locked: asks for the master password. */
 import { useState, type FormEvent } from "react";
 import { errorMessage, isWrongPasswordError } from "../api/client";
 import { unlockVault } from "../api/vault";
@@ -11,7 +12,10 @@ interface UnlockScreenProps {
   notice?: string;
 }
 
-/** Asks for the master password to unlock the vault. */
+/**
+ * Asks for the master password to unlock the vault. The typed password is
+ * cleared from the field after every attempt, successful or not.
+ */
 function UnlockScreen({ onUnlocked, notice }: UnlockScreenProps) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);

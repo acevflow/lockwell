@@ -1,10 +1,16 @@
+/** Modal confirmation dialog used before destructive or irreversible actions. */
 import { useEffect, useId } from "react";
 
 interface ConfirmDialogProps {
+  /** Heading of the dialog; it also names the dialog for screen readers. */
   title: string;
+  /** Explains what will happen if the user confirms. */
   message: string;
+  /** Text of the confirm button, such as "Delete". */
   confirmLabel: string;
+  /** Called when the user presses the confirm button. */
   onConfirm: () => void;
+  /** Called by the Cancel button and by Escape (unless `busy`). */
   onCancel: () => void;
   /** Disables the buttons while the confirmed action runs. */
   busy?: boolean;

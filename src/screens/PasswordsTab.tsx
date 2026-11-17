@@ -1,3 +1,8 @@
+/**
+ * Passwords tab: entry list with search on the left, and the selected entry
+ * (view, edit or create form) on the right. The full entry, with its password,
+ * is only fetched when the user opens it.
+ */
 import { useCallback, useMemo, useState } from "react";
 import {
   createEntry,
@@ -22,6 +27,7 @@ interface PasswordsTabProps {
   onLocked: () => void;
 }
 
+/** What the right-hand panel shows. */
 type Mode =
   | { kind: "empty" }
   | { kind: "view"; entry: Entry }

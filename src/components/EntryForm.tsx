@@ -1,3 +1,4 @@
+/** Form to create or edit a password entry. */
 import { useState, type FormEvent } from "react";
 import { errorMessage } from "../api/client";
 import type { EntryInput } from "../api/types";
@@ -5,6 +6,7 @@ import { ENTRY_LIMITS } from "../entryRules";
 import ErrorBanner from "./ErrorBanner";
 import PasswordInput from "./PasswordInput";
 
+/** Initial values of a new entry. */
 const EMPTY_ENTRY: EntryInput = {
   title: "",
   username: "",
@@ -14,15 +16,23 @@ const EMPTY_ENTRY: EntryInput = {
 };
 
 interface EntryFormProps {
+  /** Title of the form, such as "New entry". */
   heading: string;
+  /** Values to start from when editing; an empty entry by default. */
   initial?: EntryInput;
+  /** Text of the submit button. */
   submitLabel: string;
   /** Saves the entry; a rejected promise shows its error in the form. */
   onSubmit: (entry: EntryInput) => Promise<void>;
+  /** Called by the Cancel button; nothing is saved. */
   onCancel: () => void;
 }
 
-/** Form to create or edit an entry. */
+/**
+ * Form to create or edit an entry. It only checks that the title is present;
+ * the core validates everything again. The form stays busy after a successful
+ * submit because the caller then replaces it with another view.
+ */
 function EntryForm({
   heading,
   initial = EMPTY_ENTRY,
