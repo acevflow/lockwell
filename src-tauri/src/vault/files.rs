@@ -154,24 +154,9 @@ impl UnlockedVault {
         }
         self.check_outside_vault(destination)?;
 
-        let blob = self.blob_path(id);
-        let mut reader = match File::open(&blob) {
-            Ok(file) => BufReader::new(file),
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-                return Err(AppError::Corrupt("the encrypted file is missing".into()));
-            }
-            Err(error) => return Err(error.into()),
-        };
+        let mut reader = self.open_blob(id)?;
         let written = write_atomically(destination, |writer| {
-            let mut magic = [0u8; 4];
-            reader
-                .read_exact(&mut magic)
-                .map_err(|_| AppError::Corrupt("the encrypted file is truncated".into()))?;
-            if &magic != BLOB_MAGIC {
-                return Err(AppError::Corrupt(
-                    "the encrypted file has an unknown format".into(),
-                ));
-            }
+            check_blob_magic(&mut reader)?;
             stream::decrypt(&self.key, &blob_aad(id), &mut reader, writer)
                 .map_err(|error| decrypt_failure(error, "the encrypted file failed to decrypt"))
         })?;
@@ -198,6 +183,17 @@ impl UnlockedVault {
             Err(error) => return Err(error.into()),
         }
         db::delete_record(&self.conn, Table::Files, id)
+    }
+
+    /// Opens the blob of the file `id`; a missing blob means damage.
+    fn open_blob(&self, id: &str) -> AppResult<BufReader<File>> {
+        match File::open(self.blob_path(id)) {
+            Ok(file) => Ok(BufReader::new(file)),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                Err(AppError::Corrupt("the encrypted file is missing".into()))
+            }
+            Err(error) => Err(error.into()),
+        }
     }
 
     fn blob_path(&self, id: &str) -> PathBuf {
@@ -253,6 +249,20 @@ pub(crate) fn check_outside_folder(folder: &Path, path: &Path) -> AppResult<()> 
     if target.starts_with(&folder) {
         return Err(AppError::invalid(
             "files inside the vault folder cannot be used",
+        ));
+    }
+    Ok(())
+}
+
+/// Reads and checks the magic bytes at the start of a blob.
+fn check_blob_magic(reader: &mut impl Read) -> AppResult<()> {
+    let mut magic = [0u8; 4];
+    reader
+        .read_exact(&mut magic)
+        .map_err(|_| AppError::Corrupt("the encrypted file is truncated".into()))?;
+    if &magic != BLOB_MAGIC {
+        return Err(AppError::Corrupt(
+            "the encrypted file has an unknown format".into(),
         ));
     }
     Ok(())
