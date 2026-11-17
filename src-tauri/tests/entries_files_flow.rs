@@ -64,6 +64,8 @@ fn files_persist_across_instances_and_export_intact() {
     assert!(names_in(&workspace.vault_dir().join("files")).is_empty());
 }
 
+/// With the vault locked, no file under the vault folder contains any entry
+/// field, file name, file content or the master password.
 #[test]
 fn nothing_is_stored_in_clear_text() {
     let workspace = Workspace::new();
@@ -93,6 +95,7 @@ fn nothing_is_stored_in_clear_text() {
     }
 }
 
+/// Import, export and backup refuse paths inside the vault folder.
 #[test]
 fn the_vault_folder_is_never_used_for_user_files() {
     let workspace = Workspace::new();
